@@ -7,11 +7,11 @@ export const router = createRouter({
   // 应该添加到路由的初始路由列表。
   routes: [
     {
-      path: '/demo',
-      name: 'Demo',
-      component: () => import('@/views/demo/index.vue'),
+      path: '/bird',
+      name: 'Bird',
+      component: () => import('@/views/bird/index.vue'),
       meta: {
-        title: 'webgl-demo',
+        title: 'webgl-bird',
       },
     },
     {

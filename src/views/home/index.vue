@@ -3,9 +3,9 @@ import Model from '@/components/Model.vue'
 import { ref } from 'vue'
 const list = ref([
   {
-    title: '3D基础示例',
-    desc: '测试API',
-    url: '/demo'
+    title: '3D世界',
+    desc: '翱翔的小鸟',
+    url: '/bird'
   },
   {
     title: '3D室内',
