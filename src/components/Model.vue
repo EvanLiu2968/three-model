@@ -12,7 +12,7 @@ const handleRoute = (info) => {
 </script>
 
 <template>
-  <div class="card" @click="handleRoute(info)">
+  <div class="card" :style="{background: info.bg || '#909399'}" @click="handleRoute(info)">
     <h3>{{ info.title }}</h3>
     <p>{{ info.desc }}</p>
   </div>
@@ -24,8 +24,10 @@ const handleRoute = (info) => {
   padding: 20px;
   width: 200px;
   height: 200px;
+  color: #fff;
   text-align: left;
   border: 1px solid #ddd;
+  border-radius: 10px;
   cursor: pointer;
 }
 </style>
