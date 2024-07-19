@@ -1,21 +1,3 @@
-<script setup>
-import Model from '@/components/Model.vue'
-import { ref } from 'vue'
-const list = ref([
-  {
-    title: '3D天空',
-    desc: '翱翔的小鸟',
-    bg: '#409EFF',
-    url: '/bird'
-  },
-  {
-    title: '3D室内',
-    desc: '3D室内空间展示',
-    bg: '#E6A23C',
-    url: '/house'
-  }
-])
-</script>
 
 <template>
   <div class="home">
@@ -27,6 +9,42 @@ const list = ref([
     </div>
   </div>
 </template>
+<script setup>
+import Model from '@/components/Model.vue'
+import { ref } from 'vue'
+const list = ref([
+  {
+    title: '3D天空',
+    desc: '翱翔的小鸟',
+    bg: '#409EFF',
+    url: '/bird'
+  },
+  {
+    title: '3D全景',
+    desc: '3D室内空间展示',
+    bg: '#E6A23C',
+    url: '/house'
+  },
+  {
+    title: '3D园区',
+    desc: '3D园区展示',
+    bg: '#67C23A',
+    url: '/park'
+  },
+  {
+    title: '3D建筑',
+    desc: '3D建筑展示',
+    bg: '#F56C6C',
+    url: '/building'
+  },
+  {
+    title: '3D元宇宙',
+    desc: '3D元宇宙展示',
+    bg: '#685CD6',
+    url: '/metaverse'
+  },
+])
+</script>
 
 <style scoped>
 .home {

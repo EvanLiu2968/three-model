@@ -1,3 +1,9 @@
+<template>
+  <div class="webgl-demo">
+    <div ref="webglBox"></div>
+    <div class="toggle-control" @click="toggleControl">切换视角</div>
+  </div>
+</template>
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { World } from './World.js';
@@ -19,12 +25,6 @@ const toggleControl = () => {
 }
 </script>
 
-<template>
-  <div class="webgl-demo">
-    <div ref="webglBox"></div>
-    <div class="toggle-control" @click="toggleControl">切换视角</div>
-  </div>
-</template>
 <style scoped>
 .toggle-control {
   position: absolute;

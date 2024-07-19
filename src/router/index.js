@@ -7,11 +7,19 @@ export const router = createRouter({
   // 应该添加到路由的初始路由列表。
   routes: [
     {
+      path: '/',
+      name: 'Home',
+      component: () => import('@/views/home/index.vue'),
+      meta: {
+        title: '首页',
+      },
+    },
+    {
       path: '/bird',
       name: 'Bird',
       component: () => import('@/views/bird/index.vue'),
       meta: {
-        title: 'webgl-bird',
+        title: 'bird',
       },
     },
     {
@@ -19,17 +27,17 @@ export const router = createRouter({
       name: 'House',
       component: () => import('@/views/house/index.vue'),
       meta: {
-        title: 'webgl-house',
+        title: 'house',
       },
     },
     {
-      path: '/',
-      name: 'Home',
-      component: () => import('@/views/home/index.vue'),
+      path: '/park',
+      name: 'Park',
+      component: () => import('@/views/park/index.vue'),
       meta: {
-        title: '首页',
+        title: 'park',
       },
-    }
+    },
   ],
   // 是否应该禁止尾部斜杠。默认为假
   strict: true,

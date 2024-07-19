@@ -5,12 +5,12 @@ function createScene() {
 
   const loaderbox = new THREE.CubeTextureLoader() // 加载贴图
   const sky = loaderbox.load([
-    `/assets/sky/posx.jpg`,
-    `/assets/sky/negx.jpg`,
-    `/assets/sky/posy.jpg`,
-    `/assets/sky/negy.jpg`,
-    `/assets/sky/posz.jpg`,
-    `/assets/sky/negz.jpg`
+    `/bird/sky/posx.jpg`,
+    `/bird/sky/negx.jpg`,
+    `/bird/sky/posy.jpg`,
+    `/bird/sky/negy.jpg`,
+    `/bird/sky/posz.jpg`,
+    `/bird/sky/negz.jpg`
   ])
   scene.background = sky
 
