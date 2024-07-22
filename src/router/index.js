@@ -23,11 +23,11 @@ export const router = createRouter({
       },
     },
     {
-      path: '/house',
-      name: 'House',
-      component: () => import('@/views/house/index.vue'),
+      path: '/panorama',
+      name: 'Panorama',
+      component: () => import('@/views/panorama/index.vue'),
       meta: {
-        title: 'house',
+        title: 'panorama',
       },
     },
     {

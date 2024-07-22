@@ -3,16 +3,16 @@
     <div ref="webglBox"></div>
     <div class="toggle-control">
       <div class="control-item" @click="toggleAudio">
-        <img :src="isAudioPlay ? '/house/icon/audio_close.png' : '/house/icon/audio_open.png'" />
+        <img :src="isAudioPlay ? '/panorama/icon/audio_close.png' : '/panorama/icon/audio_open.png'" />
       </div>
       <div class="control-item" @click="toggleRotate">
-        <img :src="isRotatePlay ? '/house/icon/rotate_stop.png' : '/house/icon/rotate_start.png'" />
+        <img :src="isRotatePlay ? '/panorama/icon/rotate_stop.png' : '/panorama/icon/rotate_start.png'" />
       </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { World } from './World.js';
 
 const webglBox = ref(null);
@@ -23,12 +23,14 @@ const isAudioPlay = ref(true)
 const isRotatePlay = ref(true)
 
 onMounted(() => {
-  // create a new world
   world = new World(webglBox.value);
   world.init();
-  // start the animation loop
   world.start();
 });
+
+onUnmounted(() => {
+  world.audio.pause()
+})
 
 const toggleAudio = () => {
   isAudioPlay.value = !isAudioPlay.value

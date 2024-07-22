@@ -17,6 +17,7 @@ let resizer;
 
 class World {
   constructor(container) {
+    this.container = container
     camera = createCamera();
 
     renderer = createRenderer();
@@ -53,15 +54,19 @@ class World {
     this.audio = new THREE.Audio(listener);
     this.textureLoader = new THREE.TextureLoader();
     this.box.material.map = this.textureLoader.load(
-      '/house/panorama.jpg',
+      '/panorama/panorama.jpg',
       () => {
         const audioLoader = new THREE.AudioLoader();
         audioLoader.load(
-          '/house/music/pipa.mp3',
+          '/panorama/music/pipa.mp3',
           (audioBuffer) => {
             this.audio.setBuffer(audioBuffer);
             this.audio.setLoop(true);
             this.audio.setVolume(0.3);
+            this.container.addEventListener('mousemove', () => {
+              console.log('start autoplay music...');
+              this.audio.play()
+            }, { once: true });
           },
           (xhr) => {
             if (xhr.total === xhr.loaded) {

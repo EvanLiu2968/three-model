@@ -21,9 +21,9 @@ const list = ref([
   },
   {
     title: '3D全景',
-    desc: '3D室内空间展示',
+    desc: '3D全景空间展示',
     bg: '#E6A23C',
-    url: '/house'
+    url: '/panorama'
   },
   {
     title: '3D园区',
