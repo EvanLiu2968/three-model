@@ -18,11 +18,11 @@ export default class ModelLoader {
     this.loaderGLTF.setDRACOLoader(this.dracoLoader) // 设置draco模型加载器
   }
   /**
-      * 添加模型数据
-      * @param url 模型的路径
-      * @param callback 返回模型对象，常用一些功能挂接在模型对象上
-      * @param progress 返回加载进度，还有问题，需要修改
-      */
+    * 添加模型数据
+    * @param url 模型的路径
+    * @param callback 返回模型对象，常用一些功能挂接在模型对象上
+    * @param progress 返回加载进度，还有问题，需要修改
+    */
   loadModelToScene(url, callback, progress) {
     this.loadModel(url, model => {
       this.scene.add(model.object) // 加载模型

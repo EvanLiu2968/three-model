@@ -1,14 +1,14 @@
 <template>
-  <div id="jindu-text-con" v-if="progressBarShow">
-    正在加载模型请稍等：<span id="jindu-text">{{ progressText }}</span>
-    <div class="jindu-con">
-      <div id="jindu" :style="{ width: progressText }"></div>
+  <video id="videoPlayer"></video>
+  <div id="container" ref="container"></div>
+  <div v-if="progressBarShow" class="progress-text-con">
+    正在加载模型请稍等：<span class="progress-text">{{ progressText }}</span>
+    <div class="progress-con">
+      <div class="progress-bar" :style="{ width: progressText }"></div>
     </div>
   </div>
-  <video id="videoContainer"></video>
-  <div id="container" ref="container"></div>
-  <div class="operate-box">
-    <el-button type="warning" @click="onReset">场景重置</el-button>
+  <div class="btn-control">
+    <div class="control-item" @click="onReset">场景<br/>重置</div>
   </div>
 </template>
 <script setup>
@@ -122,15 +122,15 @@ const init = () => {
   // 加载水池
   loadSwimmingPool()
   // 办公楼鼠标移动效果
-  officeMouseMove()
+  // officeMouseMove()
   // 办公楼点击
-  officeFloorClick()
+  // officeFloorClick()
 }
 /**
  * 初始化视频纹理
  */
 const initVideoTexture = () => {
-  const video = document.getElementById('videoContainer')
+  const video = document.getElementById('videoPlayer')
   video.src = '/park/video/bi.mp4'
   video.autoplay = 'autoplay'
   video.loop = 'loop'
@@ -237,9 +237,9 @@ const initFence = () => {
 const loadBillBoard = () => {
   modelLoader.loadModelToScene('/park/glb/billboard.glb', (model) => {
     model.openCastShadow() // 开启投射阴影
-    model.object.position.set(4, -20, -35)
+    model.object.position.set(18, -2, -35)
     model.object.rotateY(-Math.PI / 2)
-    model.object.scale.set(2.7, 2.7, 2.7)
+    model.object.scale.set(0.5, 0.5, 0.5)
     model.object.name = '广告牌'
     const object6 = model.object.getObjectByName('Object_6')
     object6.material = new THREE.MeshBasicMaterial({
@@ -290,7 +290,7 @@ const loadOfficeBuild = () => {
         y: buildBox.max.y,
         z: buildBox.max.z
       },
-      `<span class="label">${model.object.name}</span>`
+      `<span class="model-label">${model.object.name}</span>`
     )
     // 添加标签动画
     gsap.to(labelIns.label.position, {
@@ -508,11 +508,11 @@ const loadLaboratoryBuild = () => {
 
     labelIns.addCss2dLabel(
       {
-        x: bbox.max.x,
+        x: bbox.max.x - 10,
         y: bbox.max.y,
-        z: bbox.max.z
+        z: bbox.max.z,
       },
-      `<span class="label">${model.object.name}</span>`
+      `<span class="model-label">${model.object.name}</span>`
     )
 
     // 添加标签动画
@@ -566,7 +566,7 @@ const loadCar = () => {
         y: boxx.max.y + 2,
         z: boxx.max.z
       },
-      `<span class="label">${model.object.name}</span>`
+      `<span class="model-label">${model.object.name}</span>`
     )
   })
 }
@@ -734,14 +734,7 @@ const onReset = () => {
 }
 </script>
 <style lang="scss" scoped>
-#container {
-  height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  background-color: #f0f0f0;
-}
-
-#videoContainer {
+#videoPlayer {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -750,49 +743,71 @@ const onReset = () => {
   z-index: 100;
   visibility: hidden;
 }
-
-.jindu-con {
-  width: 300px;
-  height: 10px;
-  border-radius: 50px;
-  background-color: white;
-  margin-top: 10px;
+#container {
+  height: 100vh;
+  width: 100%;
   overflow: hidden;
+  background-color: #f0f0f0;
 }
 
-#jindu {
-  height: inherit;
-  background-color: #007bff;
-  width: 0;
-}
-
-#jindu-text-con {
-  width: 300px;
+.progress-text-con {
   position: absolute;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  top: 15%;
+  top: 20px;
+  left: 50%;
+  margin-left: -90px;
+  padding: 10px;
+  width: 180px;
+  font-size: 14px;
   text-align: center;
   background-color: rgba(255, 255, 255, 0.5);
-  padding: 10px;
+  border-radius: 20px;
+  .progress-bar {
+    height: inherit;
+    background-color: #007bff;
+    width: 0;
+  }
+  .progress-con {
+    margin-left: 10px;
+    width: 160px;
+    height: 10px;
+    border-radius: 50px;
+    background-color: white;
+    margin-top: 10px;
+    overflow: hidden;
+  }
 }
 
-:deep(.label) {
-  padding: 20px;
-  background: #123ca8;
+:deep(.model-label) {
+  padding: 10px;
+  font-size: 14px;
   color: aliceblue;
   border-radius: 5px;
+  background: #007bff;
   cursor: pointer;
 }
 
-.operate-box {
+.btn-control {
   position: absolute;
-  z-index: 100;
-  bottom: 20px;
-  width: 100%;
+  top: 20px;
+  right: 20px;
+  display: inline-block;
+  color: #fff;
+}
+.control-item {
+  margin-bottom: 10px;
+  width: 50px;
+  height: 50px;
   display: flex;
-  flex-direction: row;
   justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border-width: 0px;
+  border-radius: 25px;
+  cursor: pointer;
+  img {
+    width: 20px;
+    height: 20px;
+  }
 }
 </style>

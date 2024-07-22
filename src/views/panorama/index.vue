@@ -1,7 +1,7 @@
 <template>
-  <div class="webgl-demo">
+  <div>
     <div ref="webglBox"></div>
-    <div class="toggle-control">
+    <div class="btn-control">
       <div class="control-item" @click="toggleAudio">
         <img :src="isAudioPlay ? '/panorama/icon/audio_close.png' : '/panorama/icon/audio_open.png'" />
       </div>
@@ -43,27 +43,23 @@ const toggleRotate = () => {
 </script>
 
 <style lang="scss" scoped>
-.toggle-control {
+.btn-control {
   position: absolute;
-  top: 10px;
+  top: 20px;
   right: 20px;
   display: inline-block;
-  padding: 4px 10px;
   color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
 }
 .control-item {
   margin-bottom: 10px;
-  font-size: 25px;
-  background: rgba(0, 0, 0, 0.5);
-  border-width: 0px;
-  border-radius: 25px;
   width: 50px;
   height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  border-width: 0px;
+  border-radius: 25px;
   cursor: pointer;
   img {
     width: 20px;
