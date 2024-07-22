@@ -4,14 +4,18 @@
     <h1 class="title">{{ '3D·世界' }}</h1>
     <div class="list-model">
       <template v-for="(item, i) in list" :key="i">
-        <Model :info="item" />
+        <div class="card" :style="{background: item.bg || '#909399'}" @click="handleRoute(item)">
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.desc }}</p>
+        </div>
       </template>
     </div>
   </div>
 </template>
 <script setup>
-import Model from '@/components/Model.vue'
 import { ref } from 'vue'
+import { router } from '@/router'
+
 const list = ref([
   {
     title: '3D天空',
@@ -43,24 +47,49 @@ const list = ref([
     bg: '#685CD6',
     url: '/metaverse'
   },
+  // {
+  //   title: '3D元宇宙',
+  //   desc: '3D元宇宙展示',
+  //   bg: '#685CD6',
+  //   url: '/metaverse'
+  // },
 ])
+
+const handleRoute = (info) => {
+  router.push(info.url)
+}
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .home {
-  max-width: 1280px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-.title {
-  margin-top: 0;
-  margin-bottom: 30px;
-  font-size: 24px;
-  font-weight: bold;
-  letter-spacing: 2px;
-}
-.list-model {
-  display: flex;
+  .title {
+    margin: 40px 0;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .list-model {
+    position: relative;
+    .card {
+      display: inline-block;
+      box-sizing: border-box;
+      margin-right: 20px;
+      margin-bottom: 20px;
+      padding: 20px;
+      width: 200px;
+      height: 200px;
+      color: #fff;
+      text-align: left;
+      border-radius: 10px;
+      cursor: pointer;
+      &:nth-child(5n) {
+        margin-right: 0;
+      }
+    }
+  }
+  
 }
 </style>

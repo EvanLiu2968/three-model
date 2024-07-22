@@ -13,7 +13,7 @@
 </template>
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import { World } from './World.js';
+import { World } from './model.js';
 
 const webglBox = ref(null);
 

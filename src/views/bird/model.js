@@ -1,12 +1,10 @@
+import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
+
 import { createCamera } from './components/camera.js';
 import { createLights } from './components/lights.js';
 import { createScene } from './components/scene.js';
 import { loadBirds } from './components/birds/birds.js';
 
-import { createControls } from './systems/controls.js';
-import { createRenderer } from './systems/renderer.js';
-import { Resizer } from './systems/Resizer.js';
-import { Loop } from './systems/Loop.js';
 import * as TWEEN from '@tweenjs/tween.js'
 
 let camera;
@@ -37,7 +35,17 @@ class World {
     const { ambientLight, mainLight } = createLights();
     scene.add(ambientLight, mainLight);
 
+    if (import.meta.env.MODE === 'development') {
+      this.helper = createHelper(scene)
+    }
+
     resizer = new Resizer(container, camera, renderer);
+
+    loop.updatables.push({
+      tick: () => {
+        TWEEN.update()
+      }
+    })
   }
 
   async init() {
@@ -49,6 +57,14 @@ class World {
     controls.target.copy(parrot.position);
     loop.updatables.push(parrot, flamingo, stork);
     scene.add(parrot, flamingo, stork);
+
+    if (this.helper && this.helper.stats) {
+      loop.updatables.push({
+        tick: () => {
+          this.helper.stats.update()
+        }
+      })
+    }
   }
 
   render() {
@@ -60,23 +76,37 @@ class World {
     const nextBird = index >= (this.birds.length-1) ? this.birds[0] : this.birds[index+1]
     this.activeBird = nextBird
     const target = scene.getObjectByName(nextBird)
-    controls.target.copy(target.position);
+    // controls.target.copy(target.position);
     // 创建平滑过渡的Tween对象
-    // const tween = new TWEEN.Tween({ position: camera.position, target: controls.target });
+    const tween = new TWEEN.Tween({
+      x: controls.target.x,
+      y: controls.target.y,
+      z: controls.target.z,
+      x1: camera.position.x,
+      y1: camera.position.y,
+      z1: camera.position.z,
+    });
 
-    // // 定义平滑过渡的动画并设置回调函数更新控制器
-    // tween.to({ position: target.position, target: target.position }, 2000)
-    //  .easing(TWEEN.Easing.Quadratic.Out)
-    //  .onUpdate((object) => {
-    //   console.log(object)
-    //    camera.position.set(object.x1, object.y1, object.z1);
-    //    controls.target.set(object.x2, object.y2, object.z2);
-    //  })
-    //  .onComplete(() => {
-    //    // 动画完成后的回调函数（可选）
-    //    console.log('Animation complete.');
-    //  })
-    //  .start(); // 启动动画
+    // 定义平滑过渡的动画并设置回调函数更新控制器
+    tween.to({
+      x: target.position.x,
+      y: target.position.y,
+      z: target.position.z,
+      x1: target.position.x-8,
+      y1: target.position.y+8,
+      z1: target.position.z+12,
+    }, 1000)
+     .easing(TWEEN.Easing.Quadratic.Out)
+     .onUpdate((e) => {
+      // console.log(e)
+       controls.target.set(e.x, e.y, e.z);
+       camera.position.set(e.x1, e.y1, e.z1);
+     })
+     .onComplete(() => {
+       // 动画完成后的回调函数（可选）
+       console.log('Animation complete.');
+     })
+     .start(); // 启动动画
   }
 
   start() {

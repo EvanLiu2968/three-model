@@ -55,8 +55,9 @@ export default class Viewer {
    */
   addAxis() {
     // 显示坐标轴(x轴: 红色; y轴: 绿色; z轴: 蓝色)
-    // x轴水平方向(右正); y轴垂直方向(上正); z轴垂直xy平面即屏幕(外正)
-    // this.scene.add(new AxesHelper(100))
+    if (import.meta.env.MODE === 'development') {
+      this.scene.add(new AxesHelper(100))
+    }
   }
   /**
    * 添加状态检测
