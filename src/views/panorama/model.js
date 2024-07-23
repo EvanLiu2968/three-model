@@ -70,7 +70,7 @@ class World {
       volume: 1,
     });
     this.audio.play()
-    this.isRotatePlay = true
+    this.isRotatePlay = false
     this.box.tick = () => {
       if (this.isRotatePlay) {
         this.box.rotateY(0.002);

@@ -8,6 +8,9 @@
       <div class="control-item" @click="toggleRotate">
         <img :src="isRotatePlay ? '/panorama/icon/rotate_stop.png' : '/panorama/icon/rotate_start.png'" />
       </div>
+      <!-- <div class="control-item" @click="toggleLock">
+        <img src="/panorama/icon/video.png" />
+      </div> -->
     </div>
   </div>
 </template>
@@ -20,12 +23,14 @@ const webglBox = ref(null);
 let world
 
 const isAudioPlay = ref(true)
-const isRotatePlay = ref(true)
+const isRotatePlay = ref(false)
+const isLock = ref(false)
 
 onMounted(() => {
   world = new World(webglBox.value);
   world.init();
   world.start();
+  toggleRotate()
 });
 
 onUnmounted(() => {
@@ -39,6 +44,10 @@ const toggleAudio = () => {
 const toggleRotate = () => {
   isRotatePlay.value = !isRotatePlay.value
   world.toggleRotate(isRotatePlay.value)
+}
+const toggleLock = () => {
+  isLock.value = !isLock.value
+  world.toggleLock(isLock.value)
 }
 </script>
 
