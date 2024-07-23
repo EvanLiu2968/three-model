@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tweenjs/tween.js": "^23.1.2",
     "gsap": "^3.12.5",
+    "howler": "^2.2.4",
     "three": "^0.151.3",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6"

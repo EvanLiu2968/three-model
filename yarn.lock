@@ -117,11 +117,6 @@
   resolved "https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.17.17.tgz#2b577b976e6844106715bbe0cdc57cd1528063f9"
   integrity sha512-FNZw7H3aqhF9OyRQbDDnzUApDXfC1N6fgBhkqEO2jvYCJ+DxMTfZVqg3AX0R1khg1wHTBRD5SdcibSJ+XF6bFg==
 
-"@tweenjs/tween.js@^23.1.2":
-  version "23.1.2"
-  resolved "https://registry.npmmirror.com/@tweenjs/tween.js/-/tween.js-23.1.2.tgz#4e5357fd6742f5aa50447d3fa808aed4cda93ed7"
-  integrity sha512-kMCNaZCJugWI86xiEHaY338CU5JpD0B97p1j1IKNn/Zto8PgACjQx0UxbHjmOcLl/dDOBnItwD07KmCs75pxtQ==
-
 "@vitejs/plugin-vue@^4.1.0":
   version "4.1.0"
   resolved "https://registry.npmmirror.com/@vitejs/plugin-vue/-/plugin-vue-4.1.0.tgz#b6a9d83cd91575f7ee15593f6444397f68751073"
@@ -330,6 +325,11 @@ has@^1.0.3:
   integrity sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==
   dependencies:
     function-bind "^1.1.1"
+
+howler@^2.2.4:
+  version "2.2.4"
+  resolved "https://registry.npmmirror.com/howler/-/howler-2.2.4.tgz#bd3df4a4f68a0118a51e4bd84a2bfc2e93e6e5a1"
+  integrity sha512-iARIBPgcQrwtEr+tALF+rapJ8qSc+Set2GJQl7xT1MQzWaVkFebdJhR3alVlSiUf5U7nAANKuj3aWpwerocD5w==
 
 immutable@^4.0.0:
   version "4.3.6"

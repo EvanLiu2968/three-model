@@ -7,7 +7,7 @@ function createCamera() {
   const camera = new PerspectiveCamera(60, width / height, 1, 1000);
   camera.zoom = 1;
   camera.updateProjectionMatrix();
-  camera.position.set(-0.87, 0.03, 0.4);
+  camera.position.set(0, 50, -30);
 
   return camera;
 }

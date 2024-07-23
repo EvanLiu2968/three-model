@@ -5,47 +5,37 @@ import { createLights } from './components/lights.js';
 import { createScene } from './components/scene.js';
 import { loadBirds } from './components/birds/birds.js';
 
-import * as TWEEN from '@tweenjs/tween.js'
-
-let camera;
-let controls;
-let renderer;
-let scene;
-let loop;
-let resizer;
+import gsap from 'gsap'
+import { Howl } from "howler";
 
 class World {
   constructor(container) {
-    camera = createCamera();
+    this.container = container
+    this.camera = createCamera();
 
-    renderer = createRenderer();
+    this.renderer = createRenderer();
     // 定义threejs输出画布的尺寸(单位:像素px)
     const width = window.innerWidth; //宽度
     const height = window.innerHeight; //高度
-    renderer.setSize(width, height); //设置three.js渲染区域的尺寸(像素px)
+    this.renderer.setSize(width, height); //设置three.js渲染区域的尺寸(像素px)
 
-    scene = createScene();
-    loop = new Loop(camera, scene, renderer);
-    container.append(renderer.domElement);
+    this.scene = createScene();
+    this.camera.lookAt(this.scene.position);
+    this.loop = new Loop(this.camera, this.scene, this.renderer);
+    this.container.append(this.renderer.domElement);
 
-    controls = createControls(camera, renderer.domElement);
+    this.controls = createControls(this.camera, this.renderer.domElement);
 
-    loop.updatables.push(controls);
+    this.loop.updatables.push(this.controls);
 
     const { ambientLight, mainLight } = createLights();
-    scene.add(ambientLight, mainLight);
+    this.scene.add(ambientLight, mainLight);
 
     if (import.meta.env.MODE === 'development') {
-      this.helper = createHelper(scene)
+      this.helper = createHelper(this.scene)
     }
 
-    resizer = new Resizer(container, camera, renderer);
-
-    loop.updatables.push({
-      tick: () => {
-        TWEEN.update()
-      }
-    })
+    this.resizer = new Resizer(this.container, this.camera, this.renderer);
   }
 
   async init() {
@@ -54,12 +44,20 @@ class World {
     this.birds = ['parrot', 'flamingo', 'stork']
     this.activeBird = 'parrot'
 
-    controls.target.copy(parrot.position);
-    loop.updatables.push(parrot, flamingo, stork);
-    scene.add(parrot, flamingo, stork);
+    this.controls.target.copy(parrot.position);
+    this.loop.updatables.push(parrot, flamingo, stork);
+    this.scene.add(parrot, flamingo, stork);
+
+    this.audio = new Howl({
+      src: '/bird/wind.mp3',
+      autoplay: true,
+      loop: true,
+      volume: 1,
+    });
+    this.audio.play()
 
     if (this.helper && this.helper.stats) {
-      loop.updatables.push({
+      this.loop.updatables.push({
         tick: () => {
           this.helper.stats.update()
         }
@@ -67,54 +65,43 @@ class World {
     }
   }
 
-  render() {
-    renderer.render(scene, camera);
-  }
-
   focusNext() {
     const index = this.birds.findIndex(name => name === this.activeBird)
     const nextBird = index >= (this.birds.length-1) ? this.birds[0] : this.birds[index+1]
     this.activeBird = nextBird
-    const target = scene.getObjectByName(nextBird)
-    // controls.target.copy(target.position);
-    // 创建平滑过渡的Tween对象
-    const tween = new TWEEN.Tween({
-      x: controls.target.x,
-      y: controls.target.y,
-      z: controls.target.z,
-      x1: camera.position.x,
-      y1: camera.position.y,
-      z1: camera.position.z,
-    });
-
-    // 定义平滑过渡的动画并设置回调函数更新控制器
-    tween.to({
+    const target = this.scene.getObjectByName(nextBird)
+    gsap.to(this.controls.target, {
       x: target.position.x,
       y: target.position.y,
       z: target.position.z,
-      x1: target.position.x-8,
-      y1: target.position.y+8,
-      z1: target.position.z+12,
-    }, 1000)
-     .easing(TWEEN.Easing.Quadratic.Out)
-     .onUpdate((e) => {
-      // console.log(e)
-       controls.target.set(e.x, e.y, e.z);
-       camera.position.set(e.x1, e.y1, e.z1);
-     })
-     .onComplete(() => {
-       // 动画完成后的回调函数（可选）
-       console.log('Animation complete.');
-     })
-     .start(); // 启动动画
+      duration: 1,
+      ease: 'Bounce.inOut'
+    })
+    gsap.to(this.camera.position, {
+      x: target.position.x-8,
+      y: target.position.y+8,
+      z: target.position.z+12,
+      duration: 1,
+      ease: 'Bounce.inOut'
+    })
   }
 
   start() {
-    loop.start();
+    this.loop.start();
   }
 
   stop() {
-    loop.stop();
+    this.loop.stop();
+  }
+
+  destroy() {
+    this.audio.pause()
+    this.stop()
+    // this.scene = null
+    // this.camera = null
+    // this.renderer = null
+    // this.controls = null
+    // this.loop = null
   }
 }
 

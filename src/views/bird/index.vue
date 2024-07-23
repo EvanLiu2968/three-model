@@ -5,7 +5,7 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { World } from './model.js';
 
 const webglBox = ref(null);
@@ -19,6 +19,10 @@ onMounted(() => {
   // start the animation loop
   world.start();
 });
+
+onUnmounted(() => {
+  world.destroy()
+})
 
 const toggleControl = () => {
   world.focusNext()

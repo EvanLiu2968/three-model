@@ -29,7 +29,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  world.audio.pause()
+  world.destroy()
 })
 
 const toggleAudio = () => {

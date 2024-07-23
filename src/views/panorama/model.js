@@ -1,41 +1,40 @@
 import * as THREE from 'three'
-import { createControls, createRenderer, Resizer, Loop } from '@/utils/three';
+import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
 
 import { createCamera } from './components/camera.js';
 import { createLights } from './components/lights.js';
 import { createScene } from './components/scene.js';
 
-let camera;
-let controls;
-let renderer;
-let scene;
-let loop;
-let resizer;
+import { Howl } from "howler";
 
 class World {
   constructor(container) {
     this.container = container
-    camera = createCamera();
+    this.camera = createCamera();
 
-    renderer = createRenderer();
+    this.renderer = createRenderer();
     // 定义threejs输出画布的尺寸(单位:像素px)
     const width = window.innerWidth; //宽度
     const height = window.innerHeight; //高度
-    renderer.setSize(width, height); //设置three.js渲染区域的尺寸(像素px)
+    this.renderer.setSize(width, height); //设置three.js渲染区域的尺寸(像素px)
 
-    scene = createScene();
-    camera.lookAt(scene.position);
-    loop = new Loop(camera, scene, renderer);
-    container.append(renderer.domElement);
+    this.scene = createScene();
+    this.camera.lookAt(this.scene.position);
+    this.loop = new Loop(this.camera, this.scene, this.renderer);
+    this.container.append(this.renderer.domElement);
 
-    controls = createControls(camera, renderer.domElement);
+    this.controls = createControls(this.camera, this.renderer.domElement);
 
-    loop.updatables.push(controls);
+    this.loop.updatables.push(this.controls);
 
     const { ambientLight, mainLight } = createLights();
-    scene.add(ambientLight, mainLight);
+    this.scene.add(ambientLight, mainLight);
 
-    resizer = new Resizer(container, camera, renderer);
+    if (import.meta.env.MODE === 'development') {
+      this.helper = createHelper(this.scene)
+    }
+
+    this.resizer = new Resizer(this.container, this.camera, this.renderer);
   }
 
   async init() {
@@ -46,47 +45,45 @@ class World {
       side: THREE.BackSide,
     });
     this.box = new THREE.Mesh(boxGeo, material);
-    scene.add(this.box);
-    const listener = new THREE.AudioListener();
-    this.audio = new THREE.Audio(listener);
+    this.scene.add(this.box);
     this.textureLoader = new THREE.TextureLoader();
-    this.box.material.map = this.textureLoader.load(
-      '/panorama/panorama.jpg',
-      () => {
-        const audioLoader = new THREE.AudioLoader();
-        audioLoader.load(
-          '/panorama/music/pipa.mp3',
-          (audioBuffer) => {
-            this.audio.setBuffer(audioBuffer);
-            this.audio.setLoop(true);
-            this.audio.setVolume(0.3);
-            this.container.addEventListener('mousemove', () => {
-              console.log('start autoplay music...');
-              this.audio.play()
-            }, { once: true });
-          },
-          (xhr) => {
-            if (xhr.total === xhr.loaded) {
-              console.log('onProgress xhr.total === xhr.loaded.');
-            }
-          },
-          () => {
-            /**/
-          },
-        );
-        this.isRotatePlay = true
-        this.box.tick = () => {
-          if (this.isRotatePlay) {
-            this.box.rotateY(0.002);
-          }
+    this.box.material.map = this.textureLoader.load('/panorama/city.webp');
+    // const listener = new THREE.AudioListener();
+    // this.audio = new THREE.Audio(listener);
+    // const audioLoader = new THREE.AudioLoader();
+    // audioLoader.load(
+    //   '/panorama/city.mp3',
+    //   (audioBuffer) => {
+    //     this.audio.setBuffer(audioBuffer);
+    //     this.audio.setLoop(true);
+    //     this.audio.setVolume(1);
+    //     this.container.addEventListener('mousemove', () => {
+    //       console.log('start autoplay music...');
+    //       this.audio.play()
+    //     }, { once: true });
+    //   }
+    // );
+    this.audio = new Howl({
+      src: '/panorama/city.mp3',
+      autoplay: true,
+      loop: true,
+      volume: 1,
+    });
+    this.audio.play()
+    this.isRotatePlay = true
+    this.box.tick = () => {
+      if (this.isRotatePlay) {
+        this.box.rotateY(0.002);
+      }
+    }
+    this.loop.updatables.push(this.box);
+    if (this.helper && this.helper.stats) {
+      this.loop.updatables.push({
+        tick: () => {
+          this.helper.stats.update()
         }
-        loop.updatables.push(this.box);
-      },
-    );
-  }
-
-  render() {
-    renderer.render(scene, camera);
+      })
+    }
   }
 
   toggleAudio(isAudioPlay) {
@@ -103,11 +100,21 @@ class World {
   }
 
   start() {
-    loop.start();
+    this.loop.start();
   }
 
   stop() {
-    loop.stop();
+    this.loop.stop();
+  }
+
+  destroy() {
+    this.audio.pause()
+    this.stop()
+    // this.scene = null
+    // this.camera = null
+    // this.renderer = null
+    // this.controls = null
+    // this.loop = null
   }
 }
 
