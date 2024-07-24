@@ -1,6 +1,6 @@
 <template>
   <div class="webgl-demo">
-    <div ref="webglBox"></div>
+    <div ref="webglBox" class="webglBox"></div>
     <div class="toggle-control" @click="toggleControl">切换视角</div>
   </div>
 </template>
@@ -30,6 +30,12 @@ const toggleControl = () => {
 </script>
 
 <style scoped>
+.webglBox {
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
 .toggle-control {
   position: absolute;
   top: 10px;

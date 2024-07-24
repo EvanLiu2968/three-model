@@ -1,11 +1,4 @@
 import * as THREE from 'three'
-
-// 天空盒时间类型
-const skyboxType = {
-  day: 'day',
-  dusk: 'dusk',
-  night: 'night'
-}
 export default class SkyBoxs {
   constructor(viewer) {
     this.viewer = viewer
@@ -14,7 +7,7 @@ export default class SkyBoxs {
    * 
    * @param {*} type 天空盒类型
    */
-  setSkybox(type = skyboxType.day) {
+  setSkybox(type = 'day') {
     const loaderbox = new THREE.CubeTextureLoader() // 加载贴图
     const cubeTexture = loaderbox.load([
       `/park/images/skybox/${type}/posx.jpg`,

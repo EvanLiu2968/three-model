@@ -1,125 +1,77 @@
 
 import {
-  Cache,
   WebGLRenderer,
   PerspectiveCamera,
   Scene,
   Color,
-  AxesHelper
 } from 'three'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer' // 二维标签渲染器
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer' // 三维标签渲染器
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import Stats from 'three/examples/jsm/libs/stats.module'
-import SkyBoxs from './SkyBoxs'
+import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
 import Lights from './Lights'
 import ThreeMouseEvent from './ThreeMouseEvent'
 
 export default class Viewer {
-  /**
-   *
-   * @param {*} id 场景容器id
-   */
-  constructor(id) {
-    Cache.enabled = true // 开启缓存
-    this.id = id
-    this.renderer = undefined
-    this.scene = undefined
-    this.camera = undefined
-    this.controls = undefined
+  constructor(dom) {
+    this.viewerDom = dom
     this.animateEventList = []
-    this.#initViewer()
+    this.init()
+    this.start()
   }
-  #initViewer() {
-    this.#initRenderer()
-    this.#initCamera()
-    this.#initScene()
-    this.#initControl()
-    this.#initSkybox()
-    this.#initLight()
+  init() {
+    this.initRenderer()
+    this.initCamera()
+    this.initScene()
 
-    const animate = () => {
-      requestAnimationFrame(animate)
-      this.#updateDom()
-      this.#renderDom()
-      // 全局的公共动画函数，添加函数可同步执行
-      this.animateEventList.forEach((event) => {
-        event.fun && event.content && event.fun(event.content)
+    new Resizer(this.viewerDom, this.camera, this.renderer);
+    new Resizer(this.viewerDom, this.camera, this.labelRenderer);
+    new Resizer(this.viewerDom, this.camera, this.css3DRenderer);
+
+    this.lights = new Lights(this)
+
+    this.controls = createControls(this.camera, this.renderer.domElement);
+
+    this.loop = new Loop(this.camera, this.scene, this.renderer);
+
+    if (import.meta.env.MODE === 'development') {
+      this.helper = createHelper(this.scene)
+    }
+    if (this.helper && this.helper.stats) {
+      this.loop.updatables.push({
+        tick: () => {
+          this.helper.stats.update()
+        }
       })
     }
 
-    animate()
+    this.loop.updatables.push(this.controls);
+
+    this.loop.updatables.push({
+      tick: () => {
+        this.labelRenderer.render(this.scene, this.camera) // 渲染2d标签场景
+        this.css3DRenderer.render(this.css3dScene, this.camera) // 渲染3d标签场景
+        // 全局的公共动画函数，添加函数可同步执行
+        this.animateEventList.forEach((event) => {
+          event.fun && event.content && event.fun(event.content)
+        })
+      }
+    })
   }
-  /**
-   * 添加坐标轴
-   */
-  addAxis() {
-    // 显示坐标轴(x轴: 红色; y轴: 绿色; z轴: 蓝色)
-    if (import.meta.env.MODE === 'development') {
-      this.scene.add(new AxesHelper(100))
-    }
+  start() {
+    this.loop.start();
   }
-  /**
-   * 添加状态检测
-   */
-  addStats() {
-    if (!this.statsControls) {
-      this.statsControls = new Stats()
-    }
-    this.statsControls.dom.style.position = 'absolute'
-    this.viewerDom.appendChild(this.statsControls.dom)
-    // 添加到动画
-    this.statsUpdateObj = {
-      fun: this.#statsUpdate,
-      content: this.statsControls
-    }
-    this.addAnimate(this.statsUpdateObj)
+
+  stop() {
+    this.loop.stop();
   }
-  /**
-   * 移除状态检测
-   */
-  removeStats() {
-    if (this.statsControls && this.statsUpdateObj) {
-      this.viewerDom.removeChild(this.statsControls.dom)
-      this.removeAnimate(this.statsUpdateObj)
-    }
-  }
-  #statsUpdate(statsControls) {
-    statsControls.update()
-  }
-  /**
-   * 更新DOM
-   */
-  #updateDom() {
-    this.controls.update()
-    this.camera.aspect =
-      this.viewerDom.clientWidth / this.viewerDom.clientHeight // 摄像机视锥体的长宽比，通常是使用画布的宽/画布的高
-    this.camera.updateProjectionMatrix() // 更新摄像机投影矩阵 在任何参数被改变以后必须被调用,来使得这些改变生效
-    this.renderer.setSize(
-      this.viewerDom.clientWidth,
-      this.viewerDom.clientHeight
-    ) // 设置渲染器的尺寸
-    this.renderer.setPixelRatio(window.devicePixelRatio) // 设置渲染器的像素比
-    this.labelRenderer.setSize(
-      this.viewerDom.clientWidth,
-      this.viewerDom.clientHeight
-    ) // 设置标签渲染器的尺寸
-    this.css3DRenderer.setSize(
-      this.viewerDom.clientWidth,
-      this.viewerDom.clientHeight
-    ) // 设置标签渲染器的尺寸
-  }
-  #renderDom() {
-    this.renderer.render(this.scene, this.camera) // 渲染场景
-    this.labelRenderer.render(this.scene, this.camera) // 渲染2d标签场景
-    this.css3DRenderer.render(this.css3dScene, this.camera) // 渲染3d标签场景
+
+  destroy() {
+    this.stop()
   }
   /**
    * 创建初始化场景界面
    */
-  #initRenderer() {
-    // 获取画布dom
-    this.viewerDom = document.getElementById(this.id)
+  initRenderer() {
     // 初始化渲染器
     this.renderer = new WebGLRenderer({
       // logarithmicDepthBuffer: true, // true/false 表示是否使用对数深度缓冲，true性能不好
@@ -152,68 +104,32 @@ export default class Viewer {
   /**
    * 渲染相机
    */
-  #initCamera() {
-    this.camera = new PerspectiveCamera(
-      45,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      500000
-    ) // 透视相机
+  initCamera() {
+    this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500000) // 透视相机
     this.camera.position.set(50, 0, 50) // 相机位置
     this.camera.lookAt(0, 0, 0) // 设置相机方向
   }
   /**
    * 渲染场景
    */
-  #initScene() {
+  initScene() {
     this.scene = new Scene()
-    this.css3dScene = new Scene()
     this.scene.background = new Color('rgb(5,24,38)')
+    this.css3dScene = new Scene()
   }
   /**
-   * 初始化控制
+   * 添加全局的动画事件
+   * @param animate 函数加参数对象
+   * 传入对象 = { fun: 函数名称, content: 函数参数 }
    */
-  #initControl() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.controls.enableDamping = false // 是否开启阻尼
-    this.controls.screenSpacePanning = false // 定义当平移的时候摄像机的位置将如何移动, 摄像机将在与摄像机向上方向垂直的平面中平移
-  }
-  /**
-   * 初始化天空盒
-   */
-  #initSkybox() {
-    if (!this.skyboxs) {
-      this.skyboxs = new SkyBoxs(this)
-    }
-    this.skyboxs.setSkybox()
-  }
-  /**
-   * 初始化灯光
-   */
-  #initLight() {
-    if (!this.lights) {
-      this.lights = new Lights(this)
-    }
-  }
-  /**
-     * 添加全局的动画事件
-     * @param animate 函数加参数对象
-     * 传入对象 = {
-            fun: 函数名称,
-            content: 函数参数
-        }
-     */
   addAnimate(animate) {
     this.animateEventList.push(animate)
   }
   /**
-    * 移除全局的动画事件
-    * @param animate 函数加参数对象
-    * 传入对象 = {
-           fun: 函数名称,
-           content: 函数参数
-       }
-    */
+   * 移除全局的动画事件
+   * @param animate 函数加参数对象
+   * 传入对象 = { fun: 函数名称, content: 函数参数 }
+   */
   removeAnimate(animate) {
     this.animateEventList.map((val, i) => {
       if (val === animate) this.animateEventList.splice(i, 1)

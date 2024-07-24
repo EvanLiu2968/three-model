@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div ref="webglBox"></div>
+    <div ref="webglBox" class="webglBox"></div>
     <div class="btn-control">
       <div class="control-item" @click="toggleAudio">
         <img :src="isAudioPlay ? '/panorama/icon/audio_close.png' : '/panorama/icon/audio_open.png'" />
@@ -52,6 +52,12 @@ const toggleLock = () => {
 </script>
 
 <style lang="scss" scoped>
+.webglBox {
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
 .btn-control {
   position: absolute;
   top: 20px;

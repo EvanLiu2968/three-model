@@ -10,18 +10,18 @@ import { Howl } from "howler";
 class World {
   constructor(container) {
     this.container = container
-    this.camera = createCamera();
-
-    this.renderer = createRenderer();
-    // 定义threejs输出画布的尺寸(单位:像素px)
-    const width = window.innerWidth; //宽度
-    const height = window.innerHeight; //高度
-    this.renderer.setSize(width, height); //设置three.js渲染区域的尺寸(像素px)
 
     this.scene = createScene();
+
+    this.renderer = createRenderer();
+
+    this.camera = createCamera();
     this.camera.lookAt(this.scene.position);
-    this.loop = new Loop(this.camera, this.scene, this.renderer);
+
+    new Resizer(this.container, this.camera, this.renderer);
     this.container.append(this.renderer.domElement);
+
+    this.loop = new Loop(this.camera, this.scene, this.renderer);
 
     this.controls = createControls(this.camera, this.renderer.domElement);
 
@@ -33,8 +33,6 @@ class World {
     if (import.meta.env.MODE === 'development') {
       this.helper = createHelper(this.scene)
     }
-
-    this.resizer = new Resizer(this.container, this.camera, this.renderer);
   }
 
   async init() {

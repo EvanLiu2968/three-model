@@ -9,20 +9,20 @@
   </div>
   <div class="btn-control">
     <div class="control-item" @click="onReset">场景<br/>重置</div>
+    <div class="control-item" @click="onToggleSky">{{ TimeModes[currentTime] }}</div>
   </div>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
 import * as THREE from 'three'
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
+import { Water } from 'three/examples/jsm/objects/Water2'
+import gsap from 'gsap'
+
 import Viewer from './threeModules/Viewer'
 import SkyBoxs from './threeModules/SkyBoxs'
-import Lights from './threeModules/Lights'
 import ModelLoader from './threeModules/ModelLoader'
 import Labels from './threeModules/Labels'
-import { Water } from 'three/examples/jsm/objects/Water2'
-import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
-
-import gsap from 'gsap'
 
 let viewer = null
 let cityv1 = null
@@ -44,10 +44,12 @@ let isSplit = false // 楼体是否分层
 let lastIndex // 记录上一次点击的楼层index
 let skyBoxs = null
 const sceneList = ['实验楼']
-const TimeNums = {
-  day: '白天模式',
-  night: '夜间模式'
+const TimeModes = {
+  day: '白天',
+  dusk: '黄昏',
+  night: '夜间'
 }
+const currentTime = ref('day')
 
 let progress = 0 // 物体运动时在运动路径的初始位置，范围0~1
 const velocity = 0.001 // 影响运动速率的一个值，范围0~1，需要和渲染频率结合计算才能得到真正的速率
@@ -59,28 +61,27 @@ const isopen = ref(false)
 const progressText = ref('0%')
 const progressBarShow = ref(true)
 const isDriver = ref(false)
-const timeText = ref(TimeNums.night)
 onMounted(() => {
   init()
 })
 const init = () => {
-  viewer = new Viewer('container')
+  viewer = new Viewer(document.getElementById('container'))
   skyBoxs = new SkyBoxs(viewer) // 创建天空盒
+  skyBoxs.setSkybox(currentTime.value)
   viewer.camera.position.set(17, 10, 52)
   viewer.controls.maxPolarAngle = Math.PI / 2.1 // 限制controls的上下角度范围
 
   viewer.renderer.shadowMap.enabled = true
   viewer.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-  const lights = new Lights(viewer)
-  const ambientLight = lights.addAmbientLight() // 添加环境光
+  const ambientLight = viewer.lights.addAmbientLight() // 添加环境光
   ambientLight.setOption({
     color: 0xffffff,
     intensity: 1 // 环境光强度
   })
   ambientLight.light.name = 'AmbientLight'
   // 添加平行光
-  lights.addDirectionalLight([100, 100, -10], {
+  viewer.lights.addDirectionalLight([100, 100, -10], {
     color: 'rgb(253,253,253)',
     intensity: 3,
     castShadow: true // 是否投射阴影
@@ -97,10 +98,6 @@ const init = () => {
 
   labelIns = new Labels(viewer)
 
-  viewer.addAxis()
-
-  // 添加状态检测
-  viewer.addStats()
   // 初始化视频纹理
   initVideoTexture()
   // 初始化车辆
@@ -530,7 +527,7 @@ const loadLaboratoryBuild = () => {
  */
 const loadCar = () => {
   modelLoader.loadModelToScene('/park/glTF/car13.gltf', (model) => {
-    console.log('快递车', model)
+    // console.log('快递车', model)
     car = model
     model.openCastShadow()
     model.openReceiveShadow()
@@ -575,7 +572,7 @@ const loadCar = () => {
  */
 const loadTree = () => {
   modelLoader.loadModelToScene('/park/glTF/tree_animate/new-scene.gltf', (model) => {
-    console.log('树', model)
+    // console.log('树', model)
     model.openCastShadow()
     model.object.position.set(8, 0, 16)
     model.object.scale.set(0.08, 0.08, 0.08)
@@ -731,6 +728,13 @@ const onReset = () => {
   lastIndex = null
   selectedFloorName = ''
   officeMouseMove()
+}
+const onToggleSky = () => {
+  const modes = ['day', 'dusk', 'night']
+  const index = modes.findIndex(v => v === currentTime.value)
+  const nextTime = index >= (modes.length-1) ? modes[0] : modes[index+1]
+  currentTime.value = nextTime
+  skyBoxs.setSkybox(currentTime.value)
 }
 </script>
 <style lang="scss" scoped>
