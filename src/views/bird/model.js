@@ -42,11 +42,13 @@ class World {
     const { parrot, flamingo, stork } = await loadBirds();
 
     this.birds = ['parrot', 'flamingo', 'stork']
-    this.activeBird = 'parrot'
 
     this.controls.target.copy(parrot.position);
     this.loop.updatables.push(parrot, flamingo, stork);
     this.scene.add(parrot, flamingo, stork);
+
+    this.activeBird = ''
+    this.focusNext()
 
     this.audio = new Howl({
       src: '/bird/wind.mp3',
