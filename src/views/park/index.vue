@@ -62,6 +62,7 @@ onMounted(() => {
 })
 const init = async () => {
   viewer = new Viewer(document.getElementById('container'))
+  viewer.initComposer()
   onToggleSky()
   viewer.camera.position.set(17, 10, 52)
   viewer.controls.maxPolarAngle = Math.PI / 2.1 // 限制controls的上下角度范围
@@ -312,30 +313,33 @@ const officeMouseMove = (model) => {
           // 如果当前选中的楼层和鼠标移动选中的楼层相同，则不给当前选中的楼层改变材质，仍保持原来的材质
           return
         }
-        officeBuild.object.getObjectByName(item).traverse((child) => {
-          if (child.isMesh) {
-            child.material = new THREE.MeshPhongMaterial({
-              color: 'yellow',
-              transparent: true,
-              opacity: 0.8,
-              emissive: child.material.color, // 设置材质颜色
-              emissiveMap: child.material.map, // 设置材质贴图
-              emissiveIntensity: 3 // 设置材质强度
-            })
-          }
-        })
+        viewer.outlinePass && (viewer.outlinePass.selectedObjects = [officeBuild.object.getObjectByName(item)])
+        // officeBuild.object.getObjectByName(item).traverse((child) => {
+        //   if (child.isMesh) {
+        //     child.material = new THREE.MeshPhongMaterial({
+        //       color: 'yellow',
+        //       transparent: true,
+        //       opacity: 0.8,
+        //       emissive: child.material.color, // 设置材质颜色
+        //       emissiveMap: child.material.map, // 设置材质贴图
+        //       emissiveIntensity: 3 // 设置材质强度
+        //     })
+        //   }
+        // })
       } else {
         if (!isSplit) {
-          const oldModel = oldOfficeBuild.getObjectByName(item)
-          officeBuild.object.getObjectByName(item)?.traverse((child) => {
-            if (child.isMesh) {
-              // 将未选中的楼层赋予之前的材质
-              child.material = oldModel.getObjectByName(child.name).material
-            }
-          })
+          // const oldModel = oldOfficeBuild.getObjectByName(item)
+          // officeBuild.object.getObjectByName(item)?.traverse((child) => {
+          //   if (child.isMesh) {
+          //     // 将未选中的楼层赋予之前的材质
+          //     child.material = oldModel.getObjectByName(child.name).material
+          //   }
+          // })
         }
       }
     })
+  } else {
+    viewer.outlinePass && (viewer.outlinePass.selectedObjects = [])
   }
 }
 /**

@@ -8,6 +8,13 @@ import {
 import * as THREE from 'three'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer' // 二维标签渲染器
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer' // 三维标签渲染器
+// outline postprocessing
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js'
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js'
+// utils
 import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
 import Lights from './Lights'
 
@@ -48,6 +55,7 @@ export default class Viewer {
 
     this.loop.updatables.push({
       tick: () => {
+        this.composer ? this.composer.render() : this.renderer.render(this.scene, this.camera)
         this.labelRenderer.render(this.scene, this.camera) // 渲染2d标签场景
         this.css3DRenderer.render(this.css3dScene, this.camera) // 渲染3d标签场景
         // 全局的公共动画函数，添加函数可同步执行
@@ -117,6 +125,26 @@ export default class Viewer {
     this.scene.background = new Color('rgb(5,24,38)')
     this.css3dScene = new Scene()
   }
+  initComposer() {
+    // 效果组合器
+    this.composer = new EffectComposer(this.renderer)
+    const renderPass = new RenderPass(this.scene, this.camera)
+    this.composer.addPass(renderPass)
+
+    // 选择模型外边框
+    this.outlinePass = new OutlinePass(new THREE.Vector2(window.clientWidth, window.clientHeight), this.scene, this.camera)
+    this.outlinePass.edgeStrength = 5 // 边缘强度
+    this.outlinePass.edgeThickness = 1 // 边缘厚度
+    this.outlinePass.edgeGlow = 1
+    this.outlinePass.pulsePeriod = 2
+    this.outlinePass.visibleEdgeColor.set('#0B33EC') // 可见边缘颜色
+    this.outlinePass.hiddenEdgeColor.set('#3449A9') // 隐藏边缘颜色
+    this.composer.addPass(this.outlinePass)
+    // composer抗锯齿
+    const effectFXAA = new ShaderPass(FXAAShader)
+    effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight)
+    this.composer.addPass(effectFXAA)
+  }
   /**
    * 添加全局的动画事件
    * @param animate 函数加参数对象
@@ -149,8 +177,9 @@ export default class Viewer {
     this.scene.add(label)
     return label
   }
+  // 监听事件
   on(event, callback) {
-    this.renderer.domElement.addEventListener(event, (e => {
+    const _callback = (e => {
       const raycaster = new THREE.Raycaster() // 创建射线
       const mouse = new THREE.Vector2() // 创建鼠标坐标
       mouse.x = (e.offsetX / this.renderer.domElement.clientWidth) * 2 - 1
@@ -159,11 +188,14 @@ export default class Viewer {
       // TODO: 第一个参数是否需要外部传入，减小监听范围
       const intersects = raycaster.intersectObject(this.scene, true) // 检测射线与模型是否相交
       if (intersects.length) {
-        callback(intersects[0].object)
+        const model = intersects[0].object
+        callback(model)
       }
-    }))
+    })
+    this.renderer.domElement.addEventListener(event, _callback)
+    return _callback
   }
-  // TODO: 目前无法移除on事件
+  // 移除事件，需要传入on返回的callback
   off(event, callback) {
     this.renderer.domElement.removeEventListener(event, callback)
   }

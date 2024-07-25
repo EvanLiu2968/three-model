@@ -33,6 +33,12 @@ class World {
     if (import.meta.env.MODE === 'development') {
       this.helper = createHelper(this.scene)
     }
+
+    this.loop.updatables.push({
+      tick: () => {
+        this.composer ? this.composer.render() : this.renderer.render(this.scene, this.camera)
+      }
+    })
   }
 
   async init() {
