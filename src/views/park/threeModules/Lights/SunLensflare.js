@@ -3,23 +3,23 @@ import * as THREE from 'three'
 
 export default class SunLensflare {
   /**
-     * 太阳炫光
-     * @param _viewer 视图
-     */
+   * 太阳炫光
+   * @param _viewer 视图
+   */
   constructor (_viewer) {
     this.scene = _viewer.scene
     // lensflares
     const textureLoader = new THREE.TextureLoader()
-    this.textureFlare0 = textureLoader.load('resources/lensflare/lensflare0.png')
-    this.textureFlare3 = textureLoader.load('resources/lensflare/lensflare3.png')
+    this.textureFlare0 = textureLoader.load('/park/lensflare/lensflare0.png')
+    this.textureFlare3 = textureLoader.load('/park/lensflare/lensflare3.png')
   }
 
   /**
-     * 添加炫光
-     * @param x
-     * @param y
-     * @param z
-     */
+   * 添加炫光
+   * @param x
+   * @param y
+   * @param z
+   */
   addToScene (x = 200, y = 200, z = 200) {
     this.light = new THREE.PointLight(0xffffff, 0, 0)
     this.light.color.setHSL(0.995, 0.5, 0.9)

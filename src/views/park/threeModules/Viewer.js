@@ -5,11 +5,11 @@ import {
   Scene,
   Color,
 } from 'three'
-import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer' // 二维标签渲染器
+import * as THREE from 'three'
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer' // 二维标签渲染器
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer' // 三维标签渲染器
 import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
 import Lights from './Lights'
-import ThreeMouseEvent from './ThreeMouseEvent'
 
 export default class Viewer {
   constructor(dom) {
@@ -136,21 +136,35 @@ export default class Viewer {
     })
   }
   /**
-   * 开启鼠标事件
-   * @param {*} mouseType 鼠标类型
-   * @param {*} isSelect 是否选中
-   * @param {*} callback 鼠标回调
+   * 添加2d标签
+   * @param {*} position
+   * @param {*} html html内容
    */
-  startSelectEvent(mouseType, isSelect, callback) {
-    if (!this.mouseEvent) {
-      this.mouseEvent = new ThreeMouseEvent(this, isSelect, callback, mouseType)
-    }
-    this.mouseEvent.startSelect()
+  addCss2dLabel(position = { x: 0, y: 0, z: 0 }, html = "") {
+    const div = document.createElement('div')
+    div.style.position = 'absolute'
+    div.innerHTML = html
+    const label = new CSS2DObject(div)
+    label.position.set(position.x, position.y, position.z)
+    this.scene.add(label)
+    return label
   }
-  /**
-   * 关闭鼠标事件
-   */
-  stopSelectEvent() {
-    this.mouseEvent?.stopSelect()
+  on(event, callback) {
+    this.renderer.domElement.addEventListener(event, (e => {
+      const raycaster = new THREE.Raycaster() // 创建射线
+      const mouse = new THREE.Vector2() // 创建鼠标坐标
+      mouse.x = (e.offsetX / this.renderer.domElement.clientWidth) * 2 - 1
+      mouse.y = -(e.offsetY / this.renderer.domElement.clientHeight) * 2 + 1
+      raycaster.setFromCamera(mouse, this.camera) // 设置射线的起点和终点
+      // TODO: 第一个参数是否需要外部传入，减小监听范围
+      const intersects = raycaster.intersectObject(this.scene, true) // 检测射线与模型是否相交
+      if (intersects.length) {
+        callback(intersects[0].object)
+      }
+    }))
+  }
+  // TODO: 目前无法移除on事件
+  off(event, callback) {
+    this.renderer.domElement.removeEventListener(event, callback)
   }
 }

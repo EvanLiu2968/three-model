@@ -29,11 +29,11 @@ export default class DsModel {
     this.object.position.z += this.object.position.z - center.z
   }
   /**
-     * 设置模型比例
-     * @param x 可以只填写一个参数
-     * @param y 纵轴缩放
-     * @param z 横轴缩放
-     */
+   * 设置模型比例
+   * @param x 可以只填写一个参数
+   * @param y 纵轴缩放
+   * @param z 横轴缩放
+   */
   setScale(x, y, z) {
     this.object.scale.set(x, y || x, z || x)
   }
@@ -103,7 +103,7 @@ export default class DsModel {
     }
     this.mixer.clipAction(this.model.animations[i]).play() // 播放动画
     this.animalObject = {
-      fun: this.#updateAnimal,
+      fun: this.updateAnimal,
       content: this
     }
     this.viewer.addAnimate(this.animalObject) // 添加动画监听
@@ -122,12 +122,12 @@ export default class DsModel {
    * 更新动画混合器
    * @param {*} e 
    */
-  #updateAnimal(e) {
+  updateAnimal(e) {
     e.mixer.update(e.clock.getDelta()) // 更新动画混合器
   }
   /**
-     * 开启模型阴影 数组中移除阴影
-     */
+   * 开启模型阴影 数组中移除阴影
+   */
   openCastShadow(names = []) {
     this.model.scene.traverse(mesh => {
       if (mesh.type === 'Mesh' && names.indexOf(mesh.name) === -1) {
@@ -138,9 +138,9 @@ export default class DsModel {
     })
   }
   /**
-     * 接收阴影
-     * @param names 数组中的可以接收阴影
-     */
+   * 接收阴影
+   * @param names 数组中的可以接收阴影
+   */
   openReceiveShadow(names = []) {
     this.model.scene.traverse(mesh => {
       if (names.length === 0 || names.indexOf(mesh.name) !== -1) {
@@ -149,9 +149,9 @@ export default class DsModel {
     })
   }
   /**
-     * 获取模型集合
-     * @param callback 返回模型集合
-     */
+   * 获取模型集合
+   * @param callback 返回模型集合
+   */
   forEach(callback) {
     const temp = []
     this.model.scene.traverse(mesh => {
@@ -165,8 +165,8 @@ export default class DsModel {
     })
   }
   /**
-     * 关闭模型阴影
-     */
+   * 关闭模型阴影
+   */
   closeShadow() {
     this.model.scene.traverse(mesh => {
       mesh.castShadow = false
@@ -174,9 +174,9 @@ export default class DsModel {
     })
   }
   /**
-     * 设置模型炫酷 模式
-     * @param option 颜色和透明度 颜色需要使用）0x 后面16进制颜色
-     */
+   * 设置模型炫酷 模式
+   * @param option 颜色和透明度 颜色需要使用）0x 后面16进制颜色
+   */
   setColorCool(color = 'rgb(255,255,255)', opacity = 0.05) {
     if (!this.isSaveMaterial) {
       this.materials = []

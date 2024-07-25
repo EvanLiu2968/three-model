@@ -1,10 +1,10 @@
 <template>
   <video id="videoPlayer"></video>
   <div id="container" ref="container"></div>
-  <div v-if="progressBarShow" class="progress-text-con">
-    正在加载模型请稍等：<span class="progress-text">{{ progressText }}</span>
+  <div v-if="loadPercent<100" class="progress-text-con">
+    正在加载模型请稍等：<span class="progress-text">{{ `${loadPercent}%` }}</span>
     <div class="progress-con">
-      <div class="progress-bar" :style="{ width: progressText }"></div>
+      <div class="progress-bar" :style="{ width: `${loadPercent}%` }"></div>
     </div>
   </div>
   <div class="btn-control">
@@ -20,23 +20,19 @@ import { Water } from 'three/examples/jsm/objects/Water2'
 import gsap from 'gsap'
 
 import Viewer from './threeModules/Viewer'
-import SkyBoxs from './threeModules/SkyBoxs'
 import ModelLoader from './threeModules/ModelLoader'
-import Labels from './threeModules/Labels'
 
 let viewer = null
-let cityv1 = null
+let labelIns = null // 标签实例
 let car = null
 let carLabel = null
 let officeLabel = null
 let officeBuild = null
 let oldOfficeBuild = {}
+let oldLaboratoryBuild = {}
 let curve = null
 let Mesh26 = null
 let timeen = {}
-let modelLoader = null
-let labelIns = null // 标签实例
-let laboratoryBuild = {}
 let videoTextTure = null // 视频纹理
 let curFloorName = '' // 当前鼠标点击选中的楼层name
 let modelMoveName = '' // 当前鼠标移动过程中选中的模型name
@@ -44,12 +40,13 @@ let isSplit = false // 楼体是否分层
 let lastIndex // 记录上一次点击的楼层index
 let skyBoxs = null
 const sceneList = ['实验楼']
+const hiddenList = ['cityv1', '快递车', '树', '广告牌', '路灯', '水池', '人']
 const TimeModes = {
   day: '白天',
   dusk: '黄昏',
   night: '夜间'
 }
-const currentTime = ref('day')
+const currentTime = ref('')
 
 let progress = 0 // 物体运动时在运动路径的初始位置，范围0~1
 const velocity = 0.001 // 影响运动速率的一个值，范围0~1，需要和渲染频率结合计算才能得到真正的速率
@@ -57,23 +54,90 @@ const officeFloorList = Array(6)
   .fill(0)
   .map((item, index) => `zuo${index}`) // 办公室楼层
 
-const isopen = ref(false)
-const progressText = ref('0%')
-const progressBarShow = ref(true)
+const isDoorOpen = ref(false)
+const loadPercent = ref(0)
 const isDriver = ref(false)
 onMounted(() => {
   init()
 })
-const init = () => {
+const init = async () => {
   viewer = new Viewer(document.getElementById('container'))
-  skyBoxs = new SkyBoxs(viewer) // 创建天空盒
-  skyBoxs.setSkybox(currentTime.value)
+  onToggleSky()
   viewer.camera.position.set(17, 10, 52)
   viewer.controls.maxPolarAngle = Math.PI / 2.1 // 限制controls的上下角度范围
 
   viewer.renderer.shadowMap.enabled = true
   viewer.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
+  initLight(viewer)
+
+  const modelLoader = new ModelLoader(viewer)
+
+  // 初始化视频纹理
+  initVideoTexture()
+
+  const [cityModel, officeBuildModel, laboratoryBuildModel, carModel, billboardModel, treeModel, lampModel, poolModel, peopleModel] = await modelLoader.loadModels([
+    '/park/glb/city-v1.glb',
+    '/park/glb/officeBuild.glb',
+    '/park/glTF/laboratoryBuild.gltf',
+    '/park/glTF/car13.gltf',
+    '/park/glb/billboard.glb',
+    '/park/glTF/tree_animate/new-scene.gltf',
+    '/park/glb/lightpostDouble.glb',
+    '/park/glb/pool.glb',
+    '/park/glb/ren.glb',
+  ], progress => {
+    loadPercent.value = Math.floor(progress * 100)
+  });
+  // 加载车辆
+  loadCar(carModel)
+  addModel(carModel)
+  // 加载园区
+  initCity(cityModel)
+  addModel(cityModel)
+  // 加载办公大厅
+  initOfficeBuild(officeBuildModel)
+  addModel(officeBuildModel)
+  // 加载实验楼
+  initLaboratoryBuild(laboratoryBuildModel)
+  addModel(laboratoryBuildModel)
+  // 加载广告牌
+  loadBillBoard(billboardModel)
+  addModel(billboardModel)
+  // 加载树
+  loadTree(treeModel)
+  addModel(treeModel)
+  // 加载路灯
+  loadLamp(lampModel)
+  addModel(lampModel)
+  // 加载水池
+  loadSwimmingPool(poolModel)
+  addModel(poolModel)
+  // 加载人
+  loadPeople(peopleModel)
+  addModel(peopleModel)
+  // 办公楼鼠标移动效果
+  viewer.on('mousemove', officeMouseMove)
+  // 办公楼点击
+  viewer.on('click', officeFloorClick)
+}
+
+const addModel = (model) => {
+  viewer.scene.add(model.object)
+}
+/**
+ * 初始化视频纹理
+ */
+const initVideoTexture = () => {
+  const video = document.getElementById('videoPlayer')
+  video.src = '/park/video/bi.mp4'
+  video.autoplay = 'autoplay'
+  video.loop = 'loop'
+  video.muted = 'muted'
+  videoTextTure = new THREE.VideoTexture(video)
+}
+
+const initLight = () => {
   const ambientLight = viewer.lights.addAmbientLight() // 添加环境光
   ambientLight.setOption({
     color: 0xffffff,
@@ -93,46 +157,6 @@ const init = () => {
   spotLights.add(initSpotLight(-15, 32, -30))
   spotLights.add(initSpotLight(22.5, 32, -30))
   viewer.scene.add(spotLights)
-
-  modelLoader = new ModelLoader(viewer)
-
-  labelIns = new Labels(viewer)
-
-  // 初始化视频纹理
-  initVideoTexture()
-  // 初始化车辆
-  loadCar()
-  // 初始化停车场栅栏
-  initFence()
-  // 加载办公大厅
-  loadOfficeBuild()
-  // 加载实验楼
-  loadLaboratoryBuild()
-  // 加载广告牌
-  loadBillBoard()
-  // 加载人
-  loadPeople()
-  // 加载路灯
-  loadLamp()
-  // 加载树
-  loadTree()
-  // 加载水池
-  loadSwimmingPool()
-  // 办公楼鼠标移动效果
-  // officeMouseMove()
-  // 办公楼点击
-  // officeFloorClick()
-}
-/**
- * 初始化视频纹理
- */
-const initVideoTexture = () => {
-  const video = document.getElementById('videoPlayer')
-  video.src = '/park/video/bi.mp4'
-  video.autoplay = 'autoplay'
-  video.loop = 'loop'
-  video.muted = 'muted'
-  videoTextTure = new THREE.VideoTexture(video)
 }
 
 /**
@@ -159,251 +183,213 @@ const initSpotLight = (x, y, z) => {
 /**
  * 加载人
  */
-const loadPeople = () => {
-  modelLoader.loadModelToScene('/park/glb/ren.glb', (model) => {
-    model.openCastShadow()
-    model.object.position.set(13, 0, 15)
-    model.object.name = '人'
-    model.startAnimal(1)
-    model.cloneModel([25, 0, 29]).startAnimal()
-  })
+const loadPeople = (model) => {
+  console.log('人', model)
+  model.openCastShadow()
+  model.object.position.set(13, 0, 15)
+  model.object.name = '人'
+  model.startAnimal(0)
 }
 /**
  * 加载路灯
  */
-const loadLamp = () => {
-  modelLoader.loadModelToScene('/park/glb/lightpostDouble.glb', (model) => {
-    model.openCastShadow()
-    model.object.position.set(23, 0, 29)
-    model.object.scale.set(1, 3, 1)
-    model.object.name = '路灯'
-    model.cloneModel([20, 0, 29])
-    model.cloneModel([17, 0, 29])
-    model.cloneModel([14, 0, 29])
-    model.cloneModel([9, 0, 29])
-    model.cloneModel([6, 0, 29])
-  })
+const loadLamp = (model) => {
+  model.openCastShadow()
+  model.object.position.set(23, 0, 29)
+  model.object.scale.set(1, 3, 1)
+  model.object.name = '路灯'
+  model.cloneModel([20, 0, 29])
+  model.cloneModel([17, 0, 29])
+  model.cloneModel([14, 0, 29])
+  model.cloneModel([9, 0, 29])
+  model.cloneModel([6, 0, 29])
 }
 
 /**
  * 初始化停车场栅栏
  */
-const initFence = () => {
-  modelLoader.loadModelToScene(
-    '/park/glb/city-v1.glb',
-    (model) => {
-      model.object.name = 'cityv1'
-      model.openCastShadow() // 开启投射阴影
-      model.openReceiveShadow() // 开启接收阴影
-      model.object.children.forEach((item) => {
-        // 门口栅栏动画
-        if (item.name === 'Mesh26') {
-          Mesh26 = item
-          gsap.to(item.scale, {
-            x: item.scale.x / 8,
-            duration: 5,
-            ease: 'power1.inOut',
-            onComplete: () => {
-              makeCurve()
-              isopen.value = true
-            }
-          })
+const initCity = (model) => {
+  model.object.name = 'cityv1'
+  model.openCastShadow() // 开启投射阴影
+  model.openReceiveShadow() // 开启接收阴影
+  model.object.children.forEach((item) => {
+    // 门口栅栏动画
+    if (item.name === 'Mesh26') {
+      Mesh26 = item
+      gsap.to(item.scale, {
+        x: item.scale.x / 8,
+        duration: 5,
+        ease: 'power1.inOut',
+        onComplete: () => {
+          makeCurve()
+          isDoorOpen.value = true
         }
       })
-      timeen = {
-        fun: moveOnCurve,
-        content: car
-      }
-      viewer.addAnimate(timeen)
-      cityv1 = model.object.clone()
-    },
-    (pgs) => {
-      pgs = Math.floor(pgs * 100)
-      progressText.value = pgs + '%'
-      if (pgs === 100) {
-        progressBarShow.value = false
-      }
-    },
-    (error) => {
     }
-  )
+  })
+  timeen = {
+    fun: moveOnCurve,
+    content: car
+  }
+  viewer.addAnimate(timeen)
 }
 /**
  * 加载广告牌
  */
-const loadBillBoard = () => {
-  modelLoader.loadModelToScene('/park/glb/billboard.glb', (model) => {
-    model.openCastShadow() // 开启投射阴影
-    model.object.position.set(18, -2, -35)
-    model.object.rotateY(-Math.PI / 2)
-    model.object.scale.set(0.5, 0.5, 0.5)
-    model.object.name = '广告牌'
-    const object6 = model.object.getObjectByName('Object_6')
-    object6.material = new THREE.MeshBasicMaterial({
-      map: videoTextTure,
-      side: THREE.DoubleSide,
-      transparent: true
-    })
+const loadBillBoard = (model) => {
+  model.openCastShadow() // 开启投射阴影
+  model.object.position.set(18, -2, -35)
+  model.object.rotateY(-Math.PI / 2)
+  model.object.scale.set(0.5, 0.5, 0.5)
+  model.object.name = '广告牌'
+  const object6 = model.object.getObjectByName('Object_6')
+  object6.material = new THREE.MeshBasicMaterial({
+    map: videoTextTure,
+    side: THREE.DoubleSide,
+    transparent: true
   })
 }
 /**
  * 加载办公大厅
  */
-const loadOfficeBuild = () => {
-  modelLoader.loadModelToScene('/park/glb/officeBuild.glb', (model) => {
-    officeBuild = model
-    officeBuild.openCastShadow()
-    officeBuild.openReceiveShadow()
-    officeBuild.object.rotation.y = Math.PI
-    officeBuild.object.position.set(16, 0, -5)
-    officeBuild.object.scale.set(0.2, 0.2, 0.2)
-    officeBuild.object.name = '办公大厅'
-    officeBuild.object.children.forEach((item) => {
-      item.name = item.name.replace('zuo', '')
-      if (item.name === 'ding') {
-        item.name = 6
-      }
-      item.name--
+const initOfficeBuild = (model) => {
+  officeBuild = model
+  officeBuild.openCastShadow()
+  officeBuild.openReceiveShadow()
+  officeBuild.object.rotation.y = Math.PI
+  officeBuild.object.position.set(16, 0, -5)
+  officeBuild.object.scale.set(0.2, 0.2, 0.2)
+  officeBuild.object.name = '办公大厅'
+  officeBuild.object.children.forEach((item) => {
+    item.name = item.name.replace('zuo', '')
+    if (item.name === 'ding') {
+      item.name = 6
+    }
+    item.name--
+  })
+  officeBuild.object.children
+    .sort((a, b) => a.name - b.name)
+    .forEach((v) => {
+      v.name = 'zuo' + v.name
     })
-    officeBuild.object.children
-      .sort((a, b) => a.name - b.name)
-      .forEach((v) => {
-        v.name = 'zuo' + v.name
-      })
-    officeBuild.forEach((child) => {
-      if (child.isMesh) {
-        child.frustumCulled = false // 关闭投射阴影
-        child.material.emissive = child.material.color // 设置材质颜色
-        child.material.emissiveMap = child.material.map // 设置材质贴图
-        child.material.emissiveIntensity = 1.2 // 设置材质强度
-        child.material.envmap = viewer.scene.background // 设置环境贴图
-      }
-    })
-    oldOfficeBuild = officeBuild.object.clone()
-    const buildBox = officeBuild.getBox()
-    officeLabel = labelIns.addCss2dLabel(
-      {
-        x: buildBox.max.x / 2,
-        y: buildBox.max.y,
-        z: buildBox.max.z
-      },
-      `<span class="model-label">${model.object.name}</span>`
-    )
-    // 添加标签动画
-    gsap.to(labelIns.label.position, {
-      y: buildBox.max.y + 2,
-      repeat: -1, // 循环播放
-      yoyo: true, // 循环播放
-      duration: 2, // 播放时间
-      ease: 'Bounce.inOut'
-    })
+  officeBuild.forEach((child) => {
+    if (child.isMesh) {
+      child.frustumCulled = false // 关闭投射阴影
+      child.material.emissive = child.material.color // 设置材质颜色
+      child.material.emissiveMap = child.material.map // 设置材质贴图
+      child.material.emissiveIntensity = 1.2 // 设置材质强度
+      child.material.envmap = viewer.scene.background // 设置环境贴图
+    }
+  })
+  oldOfficeBuild = officeBuild.object.clone()
+  const buildBox = officeBuild.getBox()
+  officeLabel = viewer.addCss2dLabel(
+    {
+      x: buildBox.max.x / 2,
+      y: buildBox.max.y,
+      z: buildBox.max.z
+    },
+    `<span class="model-label">${model.object.name}</span>`
+  )
+  // 添加标签动画
+  gsap.to(officeLabel.position, {
+    y: buildBox.max.y + 2,
+    repeat: -1, // 循环播放
+    yoyo: true, // 循环播放
+    duration: 2, // 播放时间
+    ease: 'Bounce.inOut'
   })
 }
 /**
  * 办公楼鼠标移动效果
  */
-const officeMouseMove = () => {
-  viewer.startSelectEvent('mousemove', false, (model) => {
-    if (curFloorName) {
-      viewer.stopSelectEvent()
-    }
-    if (model.parent?.parent?.name === '办公大厅' && !isSplit) {
-      officeFloorList.forEach((item) => {
-        if (item === model.parent.name) {
-          modelMoveName = item
-          if (curFloorName === modelMoveName) {
-            // 如果当前选中的楼层和鼠标移动选中的楼层相同，则不给当前选中的楼层改变材质，仍保持原来的材质
-            return
-          }
-          officeBuild.object.getObjectByName(item).traverse((child) => {
-            if (child.isMesh) {
-              child.material = new THREE.MeshPhongMaterial({
-                color: 'yellow',
-                transparent: true,
-                opacity: 0.8,
-                emissive: child.material.color, // 设置材质颜色
-                emissiveMap: child.material.map, // 设置材质贴图
-                emissiveIntensity: 3 // 设置材质强度
-              })
-            }
-          })
-        } else {
-          if (!isSplit) {
-            const oldModel = oldOfficeBuild.getObjectByName(item)
-            officeBuild.object.getObjectByName(item)?.traverse((child) => {
-              if (child.isMesh) {
-                // 将未选中的楼层赋予之前的材质
-                child.material = oldModel.getObjectByName(child.name).material
-              }
+const officeMouseMove = (model) => {
+  if (model?.parent?.parent?.name === '办公大厅' && !isSplit) {
+    officeFloorList.forEach((item) => {
+      if (item === model.parent.name) {
+        modelMoveName = item
+        if (curFloorName === modelMoveName) {
+          // 如果当前选中的楼层和鼠标移动选中的楼层相同，则不给当前选中的楼层改变材质，仍保持原来的材质
+          return
+        }
+        officeBuild.object.getObjectByName(item).traverse((child) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshPhongMaterial({
+              color: 'yellow',
+              transparent: true,
+              opacity: 0.8,
+              emissive: child.material.color, // 设置材质颜色
+              emissiveMap: child.material.map, // 设置材质贴图
+              emissiveIntensity: 3 // 设置材质强度
             })
           }
+        })
+      } else {
+        if (!isSplit) {
+          const oldModel = oldOfficeBuild.getObjectByName(item)
+          officeBuild.object.getObjectByName(item)?.traverse((child) => {
+            if (child.isMesh) {
+              // 将未选中的楼层赋予之前的材质
+              child.material = oldModel.getObjectByName(child.name).material
+            }
+          })
         }
-      })
-    }
-  })
+      }
+    })
+  }
 }
 /**
  * 办公楼点击
  */
-const officeFloorClick = () => {
-  viewer.renderer.domElement.addEventListener('click', (e) => {
-    const rayCaster = new THREE.Raycaster()
-    const mouse = new THREE.Vector2()
-    mouse.x = (e.offsetX / viewer.renderer.domElement.clientWidth) * 2 - 1
-    mouse.y = -(e.offsetY / viewer.renderer.domElement.clientHeight) * 2 + 1
-    // 通过摄像机和鼠标位置更新射线
-    rayCaster.setFromCamera(mouse, viewer.camera)
-    // TODO: 第一个参数是否需要指定模型
-    const intersects = rayCaster.intersectObject(viewer.scene, true) // 计算物体和射线的焦点
-    if (intersects.length > 0 && modelMoveName) {
-      const model = intersects[0].object.parent
-      if (model.name.includes('zuo')) {
-        if (!isSplit) {
-          carLabel.visible = false
-          officeLabel.visible = false
-          viewer.scene.children.find(
-            (item) => item.name === '快递车'
-          ).visible = false
-          viewer.scene.children.find((o) => o.name == 'cityv1').visible = false
-          viewer.scene.children.find((o) => o.name == '树').visible = false
-          // 实验楼材质变化
-          sceneList.forEach((item) => {
-            viewer.scene.children
-              .find((o) => o.name == item)
-              .traverse((child) => {
-                child.material = new THREE.MeshPhongMaterial({
-                  color: new THREE.Color('rgba(7,32,96,0.76)'),
-                  transparent: true,
-                  opacity: 0.1,
-                  wireframe: true,
-                  depthWrite: true // 无法被选择，鼠标穿透
-                })
+const officeFloorClick = (model) => {
+  if (model && modelMoveName) {
+    const parentModel = model.parent
+    if (parentModel.name.includes('zuo')) {
+      if (!isSplit) {
+        carLabel.visible = false
+        officeLabel.visible = false
+        viewer.scene.children.forEach( o => {
+          if (hiddenList.includes(o.name)) {
+            o.visible = false
+          }
+        })
+        // 实验楼材质变化
+        sceneList.forEach((item) => {
+          viewer.scene.children
+            .find((o) => o.name == item)
+            .traverse((child) => {
+              child.material = new THREE.MeshPhongMaterial({
+                color: new THREE.Color('rgba(7,32,96,0.76)'),
+                transparent: true,
+                opacity: 0.1,
+                wireframe: true,
+                depthWrite: true // 无法被选择，鼠标穿透
               })
-          })
-          gsap.to(viewer.scene.children.find((o) => o.name === '人').rotation, {
-            y: Math.PI, // 旋转角度
-            duration: 2,
-            ease: 'power1.inOut',
-            onComplete: () => {
-              isSplit = true
+            })
+        })
+        gsap.to(viewer.scene.children.find((o) => o.name === '人').rotation, {
+          y: Math.PI, // 旋转角度
+          duration: 2,
+          ease: 'power1.inOut',
+          onComplete: () => {
+            isSplit = true
+          }
+        })
+      }
+      selectOffice(parentModel)
+    } else {
+      if (!isSplit) {
+        const oldModel = oldOfficeBuild.getObjectByName(modelMoveName)
+        officeBuild.object
+          .getObjectByName(modelMoveName)
+          .traverse(function (child) {
+            if (child.isMesh) {
+              child.material = oldModel.getObjectByName(child.name).material
             }
           })
-        }
-        selectOffice(model)
-      } else {
-        if (!isSplit) {
-          const oldModel = oldOfficeBuild.getObjectByName(modelMoveName)
-          officeBuild.object
-            .getObjectByName(modelMoveName)
-            .traverse(function (child) {
-              if (child.isMesh) {
-                child.material = oldModel.getObjectByName(child.name).material
-              }
-            })
-        }
       }
     }
-  })
+  }
 }
 
 const selectOffice = (model) => {
@@ -469,144 +455,134 @@ const selectOffice = (model) => {
 /**
  * 加载实验楼
  */
-const loadLaboratoryBuild = () => {
-  modelLoader.loadModelToScene('/park/glTF/laboratoryBuild.gltf', (model) => {
-    // 合批
-    const geometryArr = []
-    const materialArr = []
-    // 获取几何体/材质数组
-    model.object.traverse((item) => {
-      item.updateMatrixWorld(true)
-      if (item.isMesh) {
-        item.geometry.applyMatrix4(item.matrixWorld)
-        geometryArr.push(item.geometry)
-        materialArr.push(item.material)
-      }
-    })
-    const geometryMerged = BufferGeometryUtils.mergeGeometries(
-      geometryArr,
-      true
-    )
+const initLaboratoryBuild = (model) => {
+  // 合批
+  const geometryArr = []
+  const materialArr = []
+  // 获取几何体/材质数组
+  model.object.traverse((item) => {
+    item.updateMatrixWorld(true)
+    if (item.isMesh) {
+      item.geometry.applyMatrix4(item.matrixWorld)
+      geometryArr.push(item.geometry)
+      materialArr.push(item.material)
+    }
+  })
+  const geometryMerged = BufferGeometryUtils.mergeGeometries(
+    geometryArr,
+    true
+  )
 
-    const meshMerged = new THREE.Mesh(geometryMerged, materialArr)
+  const meshMerged = new THREE.Mesh(geometryMerged, materialArr)
 
-    model.object.remove(model.object.children[0])
-    model.object.add(meshMerged)
+  model.object.remove(model.object.children[0])
+  model.object.add(meshMerged)
 
-    meshMerged.castShadow = true
-    meshMerged.receiveShadow = true
-    model.object.rotateY(Math.PI / 2)
-    model.object.position.set(-17, 0, 5)
-    model.object.scale.set(0.7, 0.7, 0.7)
-    model.object.name = '实验楼'
+  meshMerged.castShadow = true
+  meshMerged.receiveShadow = true
+  model.object.rotateY(Math.PI / 2)
+  model.object.position.set(-17, 0, 5)
+  model.object.scale.set(0.7, 0.7, 0.7)
+  model.object.name = '实验楼'
 
-    laboratoryBuild = model.object.clone()
-    const bbox = model.getBox()
+  oldLaboratoryBuild = model.object.clone()
+  const bbox = model.getBox()
 
-    labelIns.addCss2dLabel(
-      {
-        x: bbox.max.x - 10,
-        y: bbox.max.y,
-        z: bbox.max.z,
-      },
-      `<span class="model-label">${model.object.name}</span>`
-    )
+  const laboratoryLabel = viewer.addCss2dLabel(
+    {
+      x: bbox.max.x - 10,
+      y: bbox.max.y,
+      z: bbox.max.z,
+    },
+    `<span class="model-label">${model.object.name}</span>`
+  )
 
-    // 添加标签动画
-    gsap.to(labelIns.label.position, {
-      y: bbox.max.y + 2,
-      repeat: -1, // 循环播放
-      yoyo: true, // 循环播放
-      duration: 2, // 播放时间
-      ease: 'Bounce.inOut'
-    })
+  // 添加标签动画
+  gsap.to(laboratoryLabel.position, {
+    y: bbox.max.y + 2,
+    repeat: -1, // 循环播放
+    yoyo: true, // 循环播放
+    duration: 2, // 播放时间
+    ease: 'Bounce.inOut'
   })
 }
 /**
  * 加载车辆
  */
-const loadCar = () => {
-  modelLoader.loadModelToScene('/park/glTF/car13.gltf', (model) => {
-    // console.log('快递车', model)
-    car = model
-    model.openCastShadow()
-    model.openReceiveShadow()
-    model.object.position.set(11.5, 0, 18)
-    model.object.scale.set(1, 1, 1)
-    model.object.name = '快递车'
+const loadCar = (model) => {
+  car = model
+  model.openCastShadow()
+  model.openReceiveShadow()
+  model.object.position.set(11.5, 0, 18)
+  model.object.scale.set(1, 1, 1)
+  model.object.name = '快递车'
 
-    const spotLight = new THREE.SpotLight()
+  const spotLight = new THREE.SpotLight()
 
-    model.object.add(spotLight)
-    model.object.add(spotLight.target)
+  model.object.add(spotLight)
+  model.object.add(spotLight.target)
 
-    spotLight.angle = Math.PI / 4
-    spotLight.position.set(0, 2, 2)
-    spotLight.target.position.set(0, 1, 3)
-    spotLight.penumbra = 0.8
+  spotLight.angle = Math.PI / 4
+  spotLight.position.set(0, 2, 2)
+  spotLight.target.position.set(0, 1, 3)
+  spotLight.penumbra = 0.8
 
-    spotLight.castShadow = true
-    // spotLight.shadow.radius = 5 // PCFSS不支持radius
-    spotLight.shadow.mapSize.width = 1024
-    spotLight.shadow.mapSize.height = 1024
-    spotLight.shadow.camera.near = 0.1
-    spotLight.shadow.camera.far = 100
-    spotLight.shadow.camera.bias = 0.005 // 去除摩尔纹、伪影
+  spotLight.castShadow = true
+  // spotLight.shadow.radius = 5 // PCFSS不支持radius
+  spotLight.shadow.mapSize.width = 1024
+  spotLight.shadow.mapSize.height = 1024
+  spotLight.shadow.camera.near = 0.1
+  spotLight.shadow.camera.far = 100
+  spotLight.shadow.camera.bias = 0.005 // 去除摩尔纹、伪影
 
-    spotLight.visible = false
+  spotLight.visible = false
 
-    let boxx = model.getBox()
-    // 加载车的标签
-    carLabel = labelIns.addCss2dLabel(
-      {
-        x: boxx.max.x,
-        y: boxx.max.y + 2,
-        z: boxx.max.z
-      },
-      `<span class="model-label">${model.object.name}</span>`
-    )
-  })
+  let boxx = model.getBox()
+  // 加载车的标签
+  carLabel = viewer.addCss2dLabel(
+    {
+      x: boxx.max.x,
+      y: boxx.max.y + 2,
+      z: boxx.max.z
+    },
+    `<span class="model-label">${model.object.name}</span>`
+  )
 }
 /**
  * 加载树
  */
-const loadTree = () => {
-  modelLoader.loadModelToScene('/park/glTF/tree_animate/new-scene.gltf', (model) => {
-    // console.log('树', model)
-    model.openCastShadow()
-    model.object.position.set(8, 0, 16)
-    model.object.scale.set(0.08, 0.08, 0.08)
-    model.object.name = '树'
-    model.startAnimal()
-  })
+const loadTree = (model) => {
+  model.openCastShadow()
+  model.object.position.set(8, 0, 16)
+  model.object.scale.set(0.08, 0.08, 0.08)
+  model.object.name = '树'
+  model.startAnimal()
 }
 
 /**
  * 加载水池
  */
-const loadSwimmingPool = () => {
-  modelLoader.loadModelToScene('/park/glb/pool.glb', (model) => {
-    model.openCastShadow()
-    model.openReceiveShadow()
-    model.object.position.set(12, 1, -16)
-    model.object.scale.set(0.6, 0.5, 0.6)
-    model.object.name = '水池'
+const loadSwimmingPool = (model) => {
+  model.openCastShadow()
+  model.openReceiveShadow()
+  model.object.position.set(12, 1, -16)
+  model.object.scale.set(0.6, 0.5, 0.6)
+  model.object.name = '水池'
 
-    const waterTexLoader = new THREE.TextureLoader()
-    const oldWater = model.object.getObjectByName('voda_0')
-    const waterMesh = new Water(oldWater.children[0].geometry, {
-      textureWidth: 512,
-      textureHeight: 512,
-      color: 0xeeeeff,
-      flowDirection: new THREE.Vector2(1, 1),
-      scale: 1,
-      normalMap0: waterTexLoader.load('/park/images/Water_1_M_Normal.jpg'),
-      normalMap1: waterTexLoader.load('/park/images/Water_2_M_Normal.jpg')
-    })
-    waterMesh.name = '动态水'
-    oldWater.remove(oldWater.children[0])
-    oldWater.add(waterMesh)
+  const waterTexLoader = new THREE.TextureLoader()
+  const oldWater = model.object.getObjectByName('voda_0')
+  const waterMesh = new Water(oldWater.children[0].geometry, {
+    textureWidth: 512,
+    textureHeight: 512,
+    color: 0xeeeeff,
+    flowDirection: new THREE.Vector2(1, 1),
+    scale: 1,
+    normalMap0: waterTexLoader.load('/park/images/Water_1_M_Normal.jpg'),
+    normalMap1: waterTexLoader.load('/park/images/Water_2_M_Normal.jpg')
   })
+  waterMesh.name = '动态水'
+  oldWater.remove(oldWater.children[0])
+  oldWater.add(waterMesh)
 }
 
 /**
@@ -622,13 +598,13 @@ const moveOnCurve = (model) => {
         carObj.position.z.toFixed(2) >= 28.0 &&
         carObj.position.z.toFixed(2) <= 28.1
       ) {
-        if (isopen.value) {
+        if (isDoorOpen.value) {
           gsap.to(Mesh26.scale, {
             x: Mesh26.scale.x * 8,
             duration: 5,
             ease: 'power1.inOut',
             onComplete: () => {
-              isopen.value = false
+              isDoorOpen.value = false
             }
           })
         } else {
@@ -637,7 +613,7 @@ const moveOnCurve = (model) => {
             duration: 5,
             ease: 'power1.inOut',
             onComplete: () => {
-              isopen.value = true
+              isDoorOpen.value = true
               viewer.addAnimate(timeen)
             },
             onStart: () => {
@@ -713,12 +689,14 @@ const onReset = () => {
   })
   carLabel.visible = true
   officeLabel.visible = true
-  viewer.scene.children.find((o) => o.name === '快递车').visible = true
-  viewer.scene.children.find((o) => o.name === '树').visible = true
-  viewer.scene.children.find((o) => o.name === 'cityv1').visible = true
+  viewer.scene.children.forEach( o => {
+    if (hiddenList.includes(o.name)) {
+      o.visible = true
+    }
+  })
   viewer.scene.children[
     viewer.scene.children.findIndex((o) => o.name == '实验楼')
-  ] = laboratoryBuild.clone()
+  ] = oldLaboratoryBuild.clone()
   viewer.scene.children[
     viewer.scene.children.findIndex((o) => o.name == '办公大厅')
   ] = officeBuild.object = oldOfficeBuild.clone()
@@ -726,15 +704,23 @@ const onReset = () => {
   modelMoveName = null
   isSplit = false
   lastIndex = null
-  selectedFloorName = ''
-  officeMouseMove()
 }
 const onToggleSky = () => {
-  const modes = ['day', 'dusk', 'night']
+  const modes = Object.keys(TimeModes)
   const index = modes.findIndex(v => v === currentTime.value)
   const nextTime = index >= (modes.length-1) ? modes[0] : modes[index+1]
   currentTime.value = nextTime
-  skyBoxs.setSkybox(currentTime.value)
+  const type = currentTime.value
+  const cubeTextureLoader = new THREE.CubeTextureLoader() // 贴图加载
+  const cubeTexture = cubeTextureLoader.load([
+    `/park/images/skybox/${type}/posx.jpg`,
+    `/park/images/skybox/${type}/negx.jpg`,
+    `/park/images/skybox/${type}/posy.jpg`,
+    `/park/images/skybox/${type}/negy.jpg`,
+    `/park/images/skybox/${type}/posz.jpg`,
+    `/park/images/skybox/${type}/negz.jpg`,
+  ])
+  viewer.scene.background = cubeTexture
 }
 </script>
 <style lang="scss" scoped>

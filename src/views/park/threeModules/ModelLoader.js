@@ -10,7 +10,7 @@ import DsModel from './DsModel'
 export default class ModelLoader {
   constructor(viewer) {
     this.viewer = viewer
-    this.scene = viewer.scene
+    this.progressMap = {}
     this.loaderGLTF = new GLTFLoader() // 加载gltf模型
     this.loaderFBX = new FBXLoader() // 加载fbx模型
     this.dracoLoader = new DRACOLoader() // 加载draco模型(加载基于Google Draco压缩格式的3D模型的类)
@@ -18,36 +18,36 @@ export default class ModelLoader {
     this.loaderGLTF.setDRACOLoader(this.dracoLoader) // 设置draco模型加载器
   }
   /**
-    * 添加模型数据
-    * @param url 模型的路径
-    * @param callback 返回模型对象，常用一些功能挂接在模型对象上
-    * @param progress 返回加载进度，还有问题，需要修改
-    */
-  loadModelToScene(url, callback, progress) {
-    this.loadModel(url, model => {
-      this.scene.add(model.object) // 加载模型
-      callback?.(model)
-    }, num => {
-      progress?.(num) // 加载进度
-    })
-  }
-  /**
     * 加载模型
     * @param url 模型路径
     * @param callback 回调模型
     * @param progress 返回加载进度
     */
-  loadModel(url, callback, progress) {
+  async loadModel(url, progress) {
     let loader = this.loaderGLTF
     if (url.indexOf('.fbx') !== -1) {
       loader = this.loaderFBX
     }
-    loader.load(url, model => {
-      callback?.(new DsModel(model, this.viewer))
-    }, xhr => {
-      progress?.((xhr.loaded / xhr.total).toFixed(2))
-    }, (error) => {
-      console.error('模型渲染报错：', error)
+    const model = await loader.loadAsync(url, xhr => {
+      const percent = (xhr.loaded / xhr.total).toFixed(2)*1
+      progress?.(percent, url)
     })
+    return new DsModel(model, this.viewer)
+  }
+  async loadModels(urls, progress) {
+    this.progressMap = {}
+    const models = await Promise.all(urls.map(url => this.loadModel(url, this.onProgress(progress, urls))))
+    return models
+  }
+  onProgress(progress, urls) {
+    return (percent, url) => {
+      this.progressMap[url] = percent
+      let current = 0
+      urls.forEach(key => {
+        current += this.progressMap[key] || 0
+      })
+      const allPercent = (current/urls.length).toFixed(2)*1
+      progress?.(allPercent)
+    }
   }
 }
