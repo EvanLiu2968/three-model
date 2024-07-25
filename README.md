@@ -1,4 +1,4 @@
-# Three Model
+# Three World
 
 基于three.js的一些作品
 
