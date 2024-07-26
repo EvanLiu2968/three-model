@@ -15,7 +15,7 @@ import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js'
 // utils
-import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
+import { createControls, createHelper, Resizer, Loop } from '@/utils/three';
 import Lights from './Lights'
 
 export default class Viewer {
@@ -113,9 +113,8 @@ export default class Viewer {
    * 渲染相机
    */
   initCamera() {
-    this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500000) // 透视相机
-    this.camera.position.set(50, 0, 50) // 相机位置
-    this.camera.lookAt(0, 0, 0) // 设置相机方向
+    this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100) // 透视相机500000 | 100
+    this.resetView()
   }
   /**
    * 渲染场景
@@ -144,6 +143,154 @@ export default class Viewer {
     const effectFXAA = new ShaderPass(FXAAShader)
     effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight)
     this.composer.addPass(effectFXAA)
+  }
+  initPlayer(model) {
+    this.isPlayerView = false
+    const player = model.object
+    this.player = player
+    let currentAction = ''
+    const idle = () => {
+      if (currentAction === 'idle') return
+      currentAction = 'idle'
+      console.log('休闲状态')
+      model.stopAnimal()
+      model.startAnimal(2)
+    }
+    const run = () => {
+      if (currentAction === 'run') return
+      currentAction = 'run'
+      console.log('跑步状态')
+      model.stopAnimal()
+      model.startAnimal(3)
+    }
+    const walk = () => {
+      if (currentAction === 'walk') return
+      currentAction = 'walk'
+      console.log('步行状态')
+      model.stopAnimal()
+      model.startAnimal(6)
+    }
+    this.keyStates = {
+      W: false,
+      A: false,
+      S: false,
+      D: false,
+    }
+    // 用三维向量表示玩家角色(人)运动漫游速度
+    const v = new THREE.Vector3(0, 0, 0);//初始速度设置为0
+    const a = 8;//加速度：调节按键加速快慢
+    const vMax = 5;//限制玩家角色最大速度
+    const damping = -0.04;//阻尼 当没有WASD加速的时候，人、车等玩家角色慢慢减速停下来
+    this.loop.updatables.push({
+      tick: (deltaTime) => {
+        const vL = v.length();
+        if (vL < vMax && this.isPlayerView) { //限制最高速度
+          if (this.keyStates.W) {
+            const front = new THREE.Vector3();
+            player.getWorldDirection(front);//获取玩家角色(相机)正前方
+            v.add(front.multiplyScalar(a * deltaTime));
+          }
+          if (this.keyStates.S) {
+            const front = new THREE.Vector3();
+            player.getWorldDirection(front);//获取玩家角色(相机)正前方
+            v.add(front.multiplyScalar(-a * deltaTime));
+          }
+          if (this.keyStates.A) {
+            const front = new THREE.Vector3();
+            player.getWorldDirection(front);
+            const up = new THREE.Vector3(0, 1, 0);//y方向
+
+            const left = up.clone().cross(front);
+            v.add(left.multiplyScalar(a * deltaTime));
+          }
+          if (this.keyStates.D) {
+            const front = new THREE.Vector3();
+            player.getWorldDirection(front);
+            const up = new THREE.Vector3(0, 1, 0);//y方向
+            //叉乘获得垂直于向量up和front的向量 左右与叉乘顺序有关,可以用右手螺旋定则判断，也可以代码测试结合3D场景观察验证
+            const right = front.clone().cross(up);
+            v.add(right.multiplyScalar(a * deltaTime));
+          }
+        }
+        if (vL < 0.2) {
+          idle()
+        } else if (vL >= 0.2 && vL < 1) {
+          walk()
+        } else if (vL >= 1) {
+          run()
+        }
+        v.addScaledVector(v, damping);//阻尼减速
+        //更新玩家角色的位置
+        const deltaPos = v.clone().multiplyScalar(deltaTime);
+        player.position.add(deltaPos);
+        if (this.isPlayerView) {
+          // this.camera.position.set(player.position.x, player.position.y+3, player.position.z-3);
+          // this.camera.lookAt(player.position.x, player.position.y, player.position.z);
+          
+          this.controls.target.copy(player.position);
+        }
+      }
+    })
+    document.addEventListener('keydown', (event) => {
+      if (event.code === 'KeyW') this.keyStates.W = true
+      if (event.code === 'KeyA') this.keyStates.A = true
+      if (event.code === 'KeyS') this.keyStates.S = true
+      if (event.code === 'KeyD') this.keyStates.D = true
+    })
+    document.addEventListener('keyup', (event) => {
+      if (event.code === 'KeyW') this.keyStates.W = false
+      if (event.code === 'KeyA') this.keyStates.A = false
+      if (event.code === 'KeyS') this.keyStates.S = false
+      if (event.code === 'KeyD') this.keyStates.D = false
+    })
+    const cameraGroup = new THREE.Group();
+    cameraGroup.add(this.camera);
+    this.cameraGroup = cameraGroup
+    // 上下俯仰角度范围
+    const angleMin = THREE.MathUtils.degToRad(-15);//角度转弧度
+    const angleMax = THREE.MathUtils.degToRad(15);
+    document.addEventListener('mousemove', (event) => {
+      if(this.isPlayerView){
+        // 左右旋转
+        player.rotation.y -= event.movementX / 600;
+        // 鼠标上下滑动，让相机视线上下转动
+        // 相机父对象cameraGroup绕着x轴旋转,camera跟着转动
+        cameraGroup.rotation.x -= event.movementY / 600;
+        // 一旦判断.rotation.x小于-15，就设置为-15，大于15，就设置为15
+        if (cameraGroup.rotation.x < angleMin) {
+          cameraGroup.rotation.x = angleMin;
+        }
+        if (this.camera.rotation.x > angleMax) {
+          cameraGroup.rotation.x = angleMax
+        };
+      }
+    });
+  }
+  toggleView() {
+    this.isPlayerView = !this.isPlayerView
+    if (this.isPlayerView) {
+      document.body.requestPointerLock();
+      this.outlinePass.selectedObjects = []
+      const player = this.player
+      if (this.player && this.cameraGroup) {
+        this.player.add(this.cameraGroup);
+      }
+      this.camera.position.set(player.position.x, player.position.y, player.position.z);
+      this.camera.lookAt(player.position.x, player.position.y, player.position.z);
+      // this.camera.position.set(player.position.x, player.position.y+0.5, player.position.z-1);
+      // this.camera.lookAt(player.position.x, player.position.y+0.5, player.position.z+1);
+    } else {
+      document.exitPointerLock();
+      this.resetView()
+    }
+  }
+  resetView() {
+    this.isPlayerView = false
+    if (this.player && this.cameraGroup) {
+      this.player.remove(this.cameraGroup);
+    }
+    this.camera.position.set(50, 0, 50) // 相机位置
+    this.camera.lookAt(0, 0, 0) // 设置相机方向
   }
   /**
    * 添加全局的动画事件
@@ -180,6 +327,7 @@ export default class Viewer {
   // 监听事件
   on(event, callback) {
     const _callback = (e => {
+      if (this.isPlayerView) return
       const raycaster = new THREE.Raycaster() // 创建射线
       const mouse = new THREE.Vector2() // 创建鼠标坐标
       mouse.x = (e.offsetX / this.renderer.domElement.clientWidth) * 2 - 1

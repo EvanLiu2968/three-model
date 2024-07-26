@@ -10,6 +10,7 @@
   <div class="btn-control">
     <div class="control-item" @click="onReset">场景<br/>重置</div>
     <div class="control-item" @click="onToggleSky">{{ TimeModes[currentTime] }}</div>
+    <div class="control-item" @click="onToggleView">切换<br/>视角</div>
   </div>
 </template>
 <script setup>
@@ -117,6 +118,7 @@ const init = async () => {
   // 加载人
   loadPeople(peopleModel)
   addModel(peopleModel)
+  viewer.initPlayer(peopleModel)
   // 办公楼鼠标移动效果
   viewer.on('mousemove', officeMouseMove)
   // 办公楼点击
@@ -187,9 +189,9 @@ const initSpotLight = (x, y, z) => {
 const loadPeople = (model) => {
   console.log('人', model)
   model.openCastShadow()
-  model.object.position.set(13, 0, 15)
+  model.object.position.set(20, 0, 35)
   model.object.name = '人'
-  model.startAnimal(0)
+  model.startAnimal(2)
 }
 /**
  * 加载路灯
@@ -708,6 +710,7 @@ const onReset = () => {
   modelMoveName = null
   isSplit = false
   lastIndex = null
+  viewer.resetView()
 }
 const onToggleSky = () => {
   const modes = Object.keys(TimeModes)
@@ -725,6 +728,9 @@ const onToggleSky = () => {
     `/park/images/skybox/${type}/negz.jpg`,
   ])
   viewer.scene.background = cubeTexture
+}
+const onToggleView = () => {
+  viewer.toggleView()
 }
 </script>
 <style lang="scss" scoped>
@@ -759,7 +765,7 @@ const onToggleSky = () => {
     height: inherit;
     background-color: #007bff;
     width: 0;
-  }
+  }adwad
   .progress-con {
     margin-left: 10px;
     width: 160px;

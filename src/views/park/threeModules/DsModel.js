@@ -115,7 +115,8 @@ export default class DsModel {
   stopAnimal() {
     if (this.model.animations.length < 1) return
     if (!this.mixer || !this.mixer.clipAction) return
-    this.mixer.clipAction(this.model.animations[this.animaIndex]).stop()
+    if (!this.model.animations[this.animalIndex]) return
+    this.mixer.clipAction(this.model.animations[this.animalIndex]).stop()
     if (this.animaObject) this.viewer.removeAnimate(this.animaObject)
   }
   /**
