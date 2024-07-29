@@ -1,7 +1,9 @@
 <template>
   <div class="webgl-demo">
     <div ref="webglBox" class="webglBox"></div>
-    <div class="toggle-control" @click="toggleControl">切换视角</div>
+    <div class="btn-control">
+      <div class="control-item" @click="toggleControl">切换<br/>视角</div>
+    </div>
   </div>
 </template>
 <script setup>
@@ -29,21 +31,35 @@ const toggleControl = () => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .webglBox {
   height: 100vh;
   width: 100%;
   overflow: hidden;
   background-color: #f0f0f0;
 }
-.toggle-control {
+.btn-control {
   position: absolute;
-  top: 10px;
+  top: 20px;
   right: 20px;
   display: inline-block;
-  padding: 4px 10px;
   color: #fff;
-  border-radius: 4px;
+}
+.control-item {
+  margin-bottom: 10px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border-width: 0px;
+  border-radius: 25px;
   cursor: pointer;
+  img {
+    width: 20px;
+    height: 20px;
+  }
 }
 </style>

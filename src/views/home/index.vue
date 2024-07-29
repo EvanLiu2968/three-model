@@ -47,12 +47,12 @@ const list = ref([
     bg: '#685CD6',
     url: '/metaverse'
   },
-  // {
-  //   title: '3D元宇宙',
-  //   desc: '3D元宇宙展示',
-  //   bg: '#685CD6',
-  //   url: '/metaverse'
-  // },
+  {
+    title: '3D倾斜摄影模型',
+    desc: '3D倾斜摄影模型展示',
+    bg: '#685CD6',
+    url: '/obliquePhotoModel'
+  },
 ])
 
 const handleRoute = (info) => {

@@ -38,6 +38,14 @@ export const router = createRouter({
         title: 'park',
       },
     },
+    {
+      path: '/obliquePhotoModel',
+      name: 'ObliquePhotoModel',
+      component: () => import('@/views/obliquePhotoModel/index.vue'),
+      meta: {
+        title: 'obliquePhotoModel',
+      },
+    },
   ],
   // 是否应该禁止尾部斜杠。默认为假
   strict: true,

@@ -1,0 +1,12 @@
+newmtl Tile_+000_+000_1
+Ka 1 1 1
+Kd 1 1 1
+map_Kd Tile_+000_+000_1.jpg
+newmtl Tile_+000_+000_2
+Ka 1 1 1
+Kd 1 1 1
+map_Kd Tile_+000_+000_2.jpg
+newmtl Tile_+000_+000_3
+Ka 1 1 1
+Kd 1 1 1
+map_Kd Tile_+000_+000_3.jpg

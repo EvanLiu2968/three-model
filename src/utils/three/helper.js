@@ -6,7 +6,7 @@ function createHelper(scene, options = {}) {
   gridHelper.name = 'gridHelper'
   gridHelper.visible = false
 
-  const axesHelper = new AxesHelper(10);
+  const axesHelper = new AxesHelper(100);
   axesHelper.name = 'axesHelper'
   axesHelper.visible = false
 
