@@ -138,6 +138,7 @@ class World {
   }
 
   destroy() {
+    this.helper && this.helper.remove()
     this.stop()
   }
 }

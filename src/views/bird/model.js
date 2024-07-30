@@ -101,6 +101,7 @@ class World {
   }
 
   destroy() {
+    this.helper && this.helper.remove()
     this.audio.pause()
     this.stop()
     // this.scene = null

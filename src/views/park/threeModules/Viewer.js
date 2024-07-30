@@ -74,6 +74,7 @@ export default class Viewer {
   }
 
   destroy() {
+    this.helper && this.helper.remove()
     this.stop()
   }
   /**

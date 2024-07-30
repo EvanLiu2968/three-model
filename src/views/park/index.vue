@@ -14,7 +14,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import * as THREE from 'three'
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import { Water } from 'three/examples/jsm/objects/Water2'
@@ -60,6 +60,9 @@ const loadPercent = ref(0)
 const isDriver = ref(false)
 onMounted(() => {
   init()
+})
+onUnmounted(() => {
+  viewer.destroy()
 })
 const init = async () => {
   viewer = new Viewer(document.getElementById('container'))

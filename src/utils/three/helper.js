@@ -1,5 +1,6 @@
 import { AxesHelper, GridHelper } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.js'
+import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
 function createHelper(scene, options = {}) {
   const gridHelper = new GridHelper(100, 10);
@@ -13,6 +14,11 @@ function createHelper(scene, options = {}) {
   const stats = new Stats();
   document.body.appendChild(stats.domElement)
 
+  // https://lil-gui.georgealways.com/#GUI#add
+  const gui = new GUI({
+    title: '辅助控制器',
+  });
+  gui.close()
 
   if (scene) {
     scene.add(gridHelper)
@@ -34,9 +40,18 @@ function createHelper(scene, options = {}) {
     helperToggle.onclick = toggleFunc
   }
 
+  const remove = () => {
+    document.body.removeChild(stats.domElement)
+    gui.destroy()
+    scene.remove(gridHelper)
+    scene.remove(axesHelper)
+    document.body.removeChild(helperToggle)
+  }
+
   return {
+    remove,
     stats,
-    // gui,
+    gui,
     gridHelper,
     axesHelper,
   };
