@@ -2,9 +2,9 @@
   <div class="webgl-demo">
     <div ref="webglBox" class="webglBox"></div>
     <div class="btn-control">
-      <div class="control-item" @click="onReset">场景<br/>重置</div>
-      <div class="control-item" @click="onGetPosition">获取<br/>位置</div>
-      <div class="control-item" @click="onMeasure">测量</div>
+      <div class="control-item" @click="onReset">相机<br/>重置</div>
+      <div class="control-item" @click="onGetPosition">相机<br/>位置</div>
+      <div class="control-item" @click="onMeasure">{{ isMeasure ? '关闭' : '开启' }}<br/>测量</div>
       <div class="control-item" @click="onScaleUp">放大</div>
       <div class="control-item" @click="onScaleDown">缩小</div>
     </div>
@@ -15,6 +15,7 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { World } from './model.js';
 
 const webglBox = ref(null);
+const isMeasure = ref(false);
 
 let world
 
@@ -34,10 +35,16 @@ const onReset = () => {
   world.resetCameraView()
 }
 const onGetPosition = () => {
-  world.getPosition()
+  const { x, y, z } = world.getCameraPosition()
+  console.log('相机位置：', Math.floor(x), Math.floor(y), Math.floor(z))
 }
 const onMeasure = () => {
-  world.getPosition()
+  isMeasure.value = !isMeasure.value
+  if (isMeasure.value) {
+    world.measureOpen()
+  } else {
+    world.measureClose()
+  }
 }
 const onScaleUp = () => {
   world.scaleUp()

@@ -31,7 +31,7 @@ export default class Viewer {
     this.initScene()
 
     new Resizer(this.viewerDom, this.camera, this.renderer);
-    new Resizer(this.viewerDom, this.camera, this.labelRenderer);
+    new Resizer(this.viewerDom, this.camera, this.css2DRenderer);
     new Resizer(this.viewerDom, this.camera, this.css3DRenderer);
 
     this.lights = new Lights(this)
@@ -56,7 +56,7 @@ export default class Viewer {
     this.loop.updatables.push({
       tick: () => {
         this.composer ? this.composer.render() : this.renderer.render(this.scene, this.camera)
-        this.labelRenderer.render(this.scene, this.camera) // 渲染2d标签场景
+        this.css2DRenderer.render(this.scene, this.camera) // 渲染2d标签场景
         this.css3DRenderer.render(this.css3dScene, this.camera) // 渲染3d标签场景
         // 全局的公共动画函数，添加函数可同步执行
         this.animateEventList.forEach((event) => {
@@ -92,13 +92,13 @@ export default class Viewer {
     this.renderer.shadowMap.enabled = true // 场景中的阴影自动更新
     this.viewerDom.appendChild(this.renderer.domElement) // 将渲染器添加到画布中
     // 二维标签
-    this.labelRenderer = new CSS2DRenderer() // 标签渲染器
-    this.labelRenderer.domElement.style.zIndex = 2
-    this.labelRenderer.domElement.style.position = 'absolute'
-    this.labelRenderer.domElement.style.top = '0px'
-    this.labelRenderer.domElement.style.left = '0px'
-    this.labelRenderer.domElement.style.pointerEvents = 'none' // 避免HTML标签遮挡三维场景的鼠标事件
-    this.viewerDom.appendChild(this.labelRenderer.domElement)
+    this.css2DRenderer = new CSS2DRenderer() // 标签渲染器
+    this.css2DRenderer.domElement.style.zIndex = 2
+    this.css2DRenderer.domElement.style.position = 'absolute'
+    this.css2DRenderer.domElement.style.top = '0px'
+    this.css2DRenderer.domElement.style.left = '0px'
+    this.css2DRenderer.domElement.style.pointerEvents = 'none' // 避免HTML标签遮挡三维场景的鼠标事件
+    this.viewerDom.appendChild(this.css2DRenderer.domElement)
 
     // 三维标签
     this.css3DRenderer = new CSS3DRenderer() // 标签渲染器

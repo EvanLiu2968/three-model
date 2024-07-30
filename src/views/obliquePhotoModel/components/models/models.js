@@ -7,10 +7,10 @@ async function loadModels() {
   const loader = new ObjMtlLoader();
 
   const [part1Data, part2Data, part3Data, part4Data] = await Promise.all([
-    new ObjMtlLoader().loadAsync('/obliquePhotoModel/Tile_+000_+000/Tile_+000_+000.mtl'),
-    new ObjMtlLoader().loadAsync('/obliquePhotoModel/Tile_+000_+001/Tile_+000_+001.mtl'),
-    new ObjMtlLoader().loadAsync('/obliquePhotoModel/Tile_+001_+000/Tile_+001_+000.mtl'),
-    new ObjMtlLoader().loadAsync('/obliquePhotoModel/Tile_+001_+001/Tile_+001_+001.mtl'),
+    loader.loadAsync('/obliquePhotoModel/Tile_+000_+000/Tile_+000_+000.mtl'),
+    loader.loadAsync('/obliquePhotoModel/Tile_+000_+001/Tile_+000_+001.mtl'),
+    loader.loadAsync('/obliquePhotoModel/Tile_+001_+000/Tile_+001_+000.mtl'),
+    loader.loadAsync('/obliquePhotoModel/Tile_+001_+001/Tile_+001_+001.mtl'),
   ]);
   const part1 = setupModel(part1Data);
   part1.name = 'part1'

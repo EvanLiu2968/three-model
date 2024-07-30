@@ -1,4 +1,5 @@
 import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
+import Measure from '@/utils/three/Measure'
 
 import { createCamera } from './components/camera.js';
 import { createLights } from './components/lights.js';
@@ -7,6 +8,7 @@ import { loadModels } from './components/models/models.js';
 
 import gsap from 'gsap'
 import * as THREE from 'three'
+import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 class World {
   constructor(container) {
@@ -19,7 +21,17 @@ class World {
     this.camera = createCamera();
     this.camera.lookAt(this.scene.position);
 
+    // 二维标签
+    this.css2dRenderer = new CSS2DRenderer() // 标签渲染器
+    this.css2dRenderer.domElement.style.zIndex = 2
+    this.css2dRenderer.domElement.style.position = 'absolute'
+    this.css2dRenderer.domElement.style.top = '0px'
+    this.css2dRenderer.domElement.style.left = '0px'
+    this.css2dRenderer.domElement.style.pointerEvents = 'none' // 避免HTML标签遮挡三维场景的鼠标事件
+    this.container.appendChild(this.css2dRenderer.domElement)
+
     new Resizer(this.container, this.camera, this.renderer);
+    new Resizer(this.container, this.camera, this.css2dRenderer);
     this.container.append(this.renderer.domElement);
 
     this.loop = new Loop(this.camera, this.scene, this.renderer);
@@ -37,6 +49,7 @@ class World {
 
     this.loop.updatables.push({
       tick: () => {
+        this.css2dRenderer.render(this.scene, this.camera) // 渲染2d标签场景
         this.composer ? this.composer.render() : this.renderer.render(this.scene, this.camera)
       }
     })
@@ -47,11 +60,9 @@ class World {
 
     this.modelGroup = new THREE.Group();
     this.modelGroup.add(part1, part2, part3, part4);
-    this.modelGroup.scale.set(0.1, 0.1, 0.1);
-    this.modelGroup.position.set(-28, -28, -5);
+    this.modelGroup.position.set(-280, -280, -50);
     this.scene.add(this.modelGroup)
 
-    console.log(this.scene)
     setTimeout(() => {
       this.resetCameraView()
     }, 2000)
@@ -65,40 +76,54 @@ class World {
     }
   }
 
-  getPosition() {
-    console.log('控制器：', this.controls.target)
-    console.log('相机：', this.camera.position)
+  getCameraPosition() {
+    return this.camera.position.clone()
   }
 
   resetCameraView() {
     gsap.to(this.camera.position, {
       x: 0,
-      y: -54,
-      z: 37,
+      y: -540,
+      z: 370,
       duration: 1,
       ease: 'Bounce.inOut'
     })
   }
 
+  measureOpen(mode = 'Distance') {
+    this.measure = new Measure(this.renderer, this.scene, this.camera, this.controls, mode, {
+      unit: 'm',
+      decimalPrecision: 2,
+    })
+    this.measure.open()
+  }
+
+  measureClose() {
+    if (this.measure) {
+      this.measure.close();
+    }
+    this.measure = null;
+  }
+
   scaleUp() {
-    const { x, y, z } = this.scene.scale
-    const scale = 0.2
-    gsap.to(this.scene.scale, {
-      x: x + scale,
-      y: y + scale,
-      z: z + scale,
+    const { x, y, z } = this.camera.position
+    const scale = 0.9
+    gsap.to(this.camera.position, {
+      x: x * scale,
+      y: y * scale,
+      z: z * scale,
       duration: 1,
       ease: 'Bounce.inOut'
     })
   }
 
   scaleDown() {
-    const { x, y, z } = this.scene.scale
-    const scale = 0.2
-    gsap.to(this.scene.scale, {
-      x: x - scale,
-      y: y - scale,
-      z: z - scale,
+    const { x, y, z } = this.camera.position
+    const scale = 0.9
+    gsap.to(this.camera.position, {
+      x: x / scale,
+      y: y / scale,
+      z: z / scale,
       duration: 1,
       ease: 'Bounce.inOut'
     })

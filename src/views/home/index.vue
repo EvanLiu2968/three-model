@@ -36,22 +36,16 @@ const list = ref([
     url: '/park'
   },
   {
-    title: '3D建筑',
-    desc: '3D建筑展示',
-    bg: '#F56C6C',
-    url: '/building'
-  },
-  {
-    title: '3D元宇宙',
-    desc: '3D元宇宙展示',
-    bg: '#685CD6',
-    url: '/metaverse'
-  },
-  {
     title: '3D倾斜摄影模型',
     desc: '3D倾斜摄影模型展示',
     bg: '#685CD6',
     url: '/obliquePhotoModel'
+  },
+  {
+    title: '3D元宇宙',
+    desc: '3D元宇宙展示',
+    bg: '#F56C6C',
+    url: '/metaverse'
   },
 ])
 
