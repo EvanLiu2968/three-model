@@ -114,7 +114,7 @@ export default class Viewer {
    * 渲染相机
    */
   initCamera() {
-    this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100) // 透视相机500000 | 100
+    this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000) // 透视相机500000 | 100
     this.resetView()
   }
   /**

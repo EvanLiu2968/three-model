@@ -143,7 +143,7 @@ const initLight = () => {
   // 添加平行光
   viewer.lights.addDirectionalLight([100, 100, -10], {
     color: 'rgb(253,253,253)',
-    intensity: 3,
+    intensity: 10,
     castShadow: true // 是否投射阴影
   })
   const spotLights = new THREE.Group()

@@ -2,7 +2,6 @@ import * as THREE from 'three'
 import { Howl } from "howler";
 
 import { createControls, createRenderer, createScene, createHelper, Resizer, Loop } from '@/utils/three';
-import Lights from '@/utils/three/Lights'
 
 class World {
   constructor(container) {
@@ -12,7 +11,7 @@ class World {
 
     this.renderer = createRenderer();
 
-    this.camera = new THREE.PerspectiveCamera(60, 1, 1, 1000);
+    this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
     this.camera.position.set(-10, 20, -54);
 
     new Resizer(this.container, this.camera, this.renderer);
@@ -23,9 +22,6 @@ class World {
     this.controls = createControls(this.camera, this.renderer.domElement);
 
     this.loop.updatables.push(this.controls);
-
-    this.lights = new Lights(this.scene);
-    this.lights.addDirectionalLight()
 
     if (import.meta.env.MODE === 'development') {
       this.helper = createHelper(this.scene)
@@ -39,16 +35,33 @@ class World {
   }
 
   async init() {
-    console.log('initModel begins . ');
     const boxGeo = new THREE.SphereGeometry(250, 50, 50);
+    const params = {
+      color: '#ffffff'
+    }
     const material = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      color: params.color,
+      lightMapIntensity: 1,
       side: THREE.BackSide,
+    });
+    this.helper.gui.addColor(params, 'color').onChange((val) => {
+      material.color.set(val);
     });
     this.box = new THREE.Mesh(boxGeo, material);
     this.scene.add(this.box);
     this.textureLoader = new THREE.TextureLoader();
-    this.box.material.map = this.textureLoader.load('/panorama/city.webp');
+    const textureBg = this.textureLoader.load('/panorama/city.webp');
+    textureBg.mapping = THREE.EquirectangularReflectionMapping
+    textureBg.colorSpace = THREE.SRGBColorSpace // 显示为原图颜色
+    this.box.material.map = textureBg
+    this.isRotatePlay = false
+    this.loop.updatables.push({
+      tick: () => {
+        if (this.isRotatePlay) {
+          this.box.rotateY(0.002);
+        }
+      }
+    });
     // const listener = new THREE.AudioListener();
     // this.audio = new THREE.Audio(listener);
     // const audioLoader = new THREE.AudioLoader();
@@ -71,13 +84,7 @@ class World {
       volume: 1,
     });
     this.audio.play()
-    this.isRotatePlay = false
-    this.box.tick = () => {
-      if (this.isRotatePlay) {
-        this.box.rotateY(0.002);
-      }
-    }
-    this.loop.updatables.push(this.box);
+
     if (this.helper && this.helper.stats) {
       this.loop.updatables.push({
         tick: () => {
