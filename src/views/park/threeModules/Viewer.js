@@ -41,7 +41,7 @@ export default class Viewer {
     this.loop = new Loop(this.camera, this.scene, this.renderer);
 
     if (import.meta.env.MODE === 'development') {
-      this.helper = createHelper(this.scene)
+      this.helper = createHelper(this.scene, { sky: 'day'})
     }
     if (this.helper && this.helper.stats) {
       this.loop.updatables.push({

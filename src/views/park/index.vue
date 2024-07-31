@@ -9,7 +9,6 @@
   </div>
   <div class="btn-control">
     <div class="control-item" @click="onReset">场景<br/>重置</div>
-    <div class="control-item" @click="onToggleSky">{{ TimeModes[currentTime] }}</div>
     <div class="control-item" @click="onToggleView">切换<br/>视角</div>
   </div>
 </template>
@@ -39,15 +38,8 @@ let curFloorName = '' // 当前鼠标点击选中的楼层name
 let modelMoveName = '' // 当前鼠标移动过程中选中的模型name
 let isSplit = false // 楼体是否分层
 let lastIndex // 记录上一次点击的楼层index
-let skyBoxs = null
 const sceneList = ['实验楼']
 const hiddenList = ['cityv1', '快递车', '树', '广告牌', '路灯', '水池', '人']
-const TimeModes = {
-  day: '白天',
-  dusk: '黄昏',
-  night: '夜间'
-}
-const currentTime = ref('')
 
 let progress = 0 // 物体运动时在运动路径的初始位置，范围0~1
 const velocity = 0.001 // 影响运动速率的一个值，范围0~1，需要和渲染频率结合计算才能得到真正的速率
@@ -67,7 +59,6 @@ onUnmounted(() => {
 const init = async () => {
   viewer = new Viewer(document.getElementById('container'))
   viewer.initComposer()
-  onToggleSky()
   viewer.camera.position.set(17, 10, 52)
   viewer.controls.maxPolarAngle = Math.PI / 2.1 // 限制controls的上下角度范围
 
@@ -144,11 +135,10 @@ const initVideoTexture = () => {
 }
 
 const initLight = () => {
-  const ambientLight = viewer.lights.addAmbientLight() // 添加环境光
-  ambientLight.setOption({
+  const ambientLight = viewer.lights.addAmbientLight({
     color: 0xffffff,
-    intensity: 1 // 环境光强度
-  })
+    intensity: 1
+  }) // 添加环境光
   ambientLight.light.name = 'AmbientLight'
   // 添加平行光
   viewer.lights.addDirectionalLight([100, 100, -10], {
@@ -190,7 +180,6 @@ const initSpotLight = (x, y, z) => {
  * 加载人
  */
 const loadPeople = (model) => {
-  console.log('人', model)
   model.openCastShadow()
   model.object.position.set(20, 0, 35)
   model.object.name = '人'
@@ -714,23 +703,6 @@ const onReset = () => {
   isSplit = false
   lastIndex = null
   viewer.resetView()
-}
-const onToggleSky = () => {
-  const modes = Object.keys(TimeModes)
-  const index = modes.findIndex(v => v === currentTime.value)
-  const nextTime = index >= (modes.length-1) ? modes[0] : modes[index+1]
-  currentTime.value = nextTime
-  const type = currentTime.value
-  const cubeTextureLoader = new THREE.CubeTextureLoader() // 贴图加载
-  const cubeTexture = cubeTextureLoader.load([
-    `/park/images/skybox/${type}/posx.jpg`,
-    `/park/images/skybox/${type}/negx.jpg`,
-    `/park/images/skybox/${type}/posy.jpg`,
-    `/park/images/skybox/${type}/negy.jpg`,
-    `/park/images/skybox/${type}/posz.jpg`,
-    `/park/images/skybox/${type}/negz.jpg`,
-  ])
-  viewer.scene.background = cubeTexture
 }
 const onToggleView = () => {
   viewer.toggleView()

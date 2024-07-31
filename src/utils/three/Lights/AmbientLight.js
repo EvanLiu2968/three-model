@@ -10,7 +10,7 @@ export default class AmbientLight extends Light {
   constructor(scene, option = { color: 'rgb(255,255,255)' }) {
     super(scene)
     this.scene = scene
-    this.light = new THREE.AmbientLight(0x404040) // soft white light
+    this.light = new THREE.AmbientLight(new THREE.Color(option.color))
     this.setOption(option)
     this.scene.add(this.light)
   }

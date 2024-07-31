@@ -32,7 +32,7 @@ class World {
     this.lights.addHemisphereLight()
 
     if (import.meta.env.MODE === 'development') {
-      this.helper = createHelper(this.scene)
+      this.helper = createHelper(this.scene, { sky: 'day'})
     }
 
     this.loop.updatables.push({

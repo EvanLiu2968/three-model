@@ -38,10 +38,11 @@ class World {
     this.loop.updatables.push(this.controls);
 
     this.lights = new Lights(this.scene);
-    this.lights.addDirectionalLight()
+    this.lights.addDirectionalLight([1000, 1000, 1000])
+    this.lights.addHemisphereLight([1000, 1000, 1000])
 
     if (import.meta.env.MODE === 'development') {
-      this.helper = createHelper(this.scene)
+      this.helper = createHelper(this.scene, { sky: 'day'})
     }
 
     this.loop.updatables.push({

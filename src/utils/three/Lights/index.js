@@ -15,8 +15,8 @@ export default class Lights {
   /**
    * 添加环境光源
    */
-  addAmbientLight() {
-    const ambientLight = new AmbientLight(this.scene)
+  addAmbientLight(option = { color: 'rgb(255,255,255)' }) {
+    const ambientLight = new AmbientLight(this.scene, option)
     this.lightList.push(ambientLight)
     return ambientLight
   }
