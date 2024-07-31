@@ -1,23 +1,22 @@
-import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
-
-import { createCamera } from './components/camera.js';
-import { createLights } from './components/lights.js';
-import { createScene } from './components/scene.js';
-import { loadBirds } from './components/birds/birds.js';
-
+import * as THREE from 'three'
 import gsap from 'gsap'
 import { Howl } from "howler";
+
+import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
+import Lights from '@/utils/three/Lights'
+import { loadBirds } from './birds/index.js';
+
 
 class World {
   constructor(container) {
     this.container = container
 
-    this.scene = createScene();
+    this.scene = new THREE.Scene();
 
     this.renderer = createRenderer();
 
-    this.camera = createCamera();
-    this.camera.lookAt(this.scene.position);
+    this.camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    this.camera.position.set(0, 20, 50);
 
     new Resizer(this.container, this.camera, this.renderer);
     this.container.append(this.renderer.domElement);
@@ -28,8 +27,9 @@ class World {
 
     this.loop.updatables.push(this.controls);
 
-    const { ambientLight, mainLight } = createLights();
-    this.scene.add(ambientLight, mainLight);
+    this.lights = new Lights(this.scene);
+    this.lights.addDirectionalLight()
+    this.lights.addHemisphereLight()
 
     if (import.meta.env.MODE === 'development') {
       this.helper = createHelper(this.scene)

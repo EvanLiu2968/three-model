@@ -42,8 +42,8 @@ const list = ref([
     url: '/obliquePhotoModel'
   },
   {
-    title: '3D元宇宙',
-    desc: '3D元宇宙展示',
+    title: '3D人物模型',
+    desc: '3D人物模型展示',
     bg: '#F56C6C',
     url: '/metaverse'
   },

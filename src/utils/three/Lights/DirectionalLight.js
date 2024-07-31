@@ -1,18 +1,18 @@
 import * as THREE from 'three'
+import Light from './Light'
 
 /**
- * 灯光基类
+ * 平行光，用于模拟太阳光效果
  */
-export default class DirectionalLight {
-  /**
-   * 灯光基类
-   */
-  constructor (_viewer, position = [200, 200, 200], option = { color: 'rgb(255,255,255)' }) {
-    this.viewer = _viewer
+export default class DirectionalLight extends Light {
+
+  constructor (scene, position = [200, 200, 200], option = { color: 'rgb(255,255,255)' }) {
+    super(scene)
+    this.scene = scene
     this.light = new THREE.DirectionalLight(new THREE.Color(option.color))
     this.setPosition(position)
     this.setOption(option)
-    this.viewer.scene.add(this.light)
+    this.scene.add(this.light)
   }
 
   /**
@@ -35,15 +35,5 @@ export default class DirectionalLight {
     // 最大可视距和最小可视距
     light.shadow.camera.near = 0.01
     light.shadow.camera.far = 2000
-  }
-
-  /**
-   * 设置灯光位置
-   * @param x
-   * @param y
-   * @param z
-   */
-  setPosition ([x, y, z]) {
-    if (this.light) this.light.position.set(x || 0, y || 0, z || 0)
   }
 }

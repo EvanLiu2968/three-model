@@ -791,7 +791,7 @@ const onToggleView = () => {
 
 .btn-control {
   position: absolute;
-  top: 20px;
+  top: 30px;
   right: 20px;
   display: inline-block;
   color: #fff;

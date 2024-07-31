@@ -1,4 +1,4 @@
-import { WebGLRenderer } from 'three';
+import { WebGLRenderer, Scene } from 'three';
 
 function createRenderer() {
   const renderer = new WebGLRenderer({ antialias: true });
@@ -8,4 +8,10 @@ function createRenderer() {
   return renderer;
 }
 
-export { createRenderer };
+function createScene() {
+  const scene = new Scene();
+
+  return scene;
+}
+
+export { createRenderer, createScene };

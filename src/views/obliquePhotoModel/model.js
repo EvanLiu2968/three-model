@@ -1,25 +1,22 @@
-import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
-import Measure from '@/utils/three/Measure'
-
-import { createCamera } from './components/camera.js';
-import { createLights } from './components/lights.js';
-import { createScene } from './components/scene.js';
-import { loadModels } from './components/models/models.js';
-
 import gsap from 'gsap'
 import * as THREE from 'three'
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer";
+
+import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
+import Measure from '@/utils/three/Measure'
+import Lights from '@/utils/three/Lights'
+import { loadModels } from './models';
 
 class World {
   constructor(container) {
     this.container = container
 
-    this.scene = createScene();
+    this.scene = new THREE.Scene();
 
     this.renderer = createRenderer();
 
-    this.camera = createCamera();
-    this.camera.lookAt(this.scene.position);
+    this.camera = new THREE.PerspectiveCamera(35, 1, 0.5, 10000);
+    this.camera.position.set(0, 20, 50);
 
     // 二维标签
     this.css2dRenderer = new CSS2DRenderer() // 标签渲染器
@@ -40,8 +37,8 @@ class World {
 
     this.loop.updatables.push(this.controls);
 
-    const { ambientLight, mainLight } = createLights();
-    this.scene.add(ambientLight, mainLight);
+    this.lights = new Lights(this.scene);
+    this.lights.addDirectionalLight()
 
     if (import.meta.env.MODE === 'development') {
       this.helper = createHelper(this.scene)

@@ -1,9 +1,6 @@
 <template>
-  <div class="webgl-demo">
+  <div>
     <div ref="webglBox" class="webglBox"></div>
-    <div class="btn-control">
-      <div class="control-item" @click="toggleControl">切换<br/>视角</div>
-    </div>
   </div>
 </template>
 <script setup>
@@ -15,20 +12,14 @@ const webglBox = ref(null);
 let world
 
 onMounted(() => {
-  // create a new world
   world = new World(webglBox.value);
   world.init();
-  // start the animation loop
   world.start();
 });
 
 onUnmounted(() => {
   world.destroy()
 })
-
-const toggleControl = () => {
-  world.focusNext()
-}
 </script>
 
 <style lang="scss" scoped>
@@ -36,11 +27,11 @@ const toggleControl = () => {
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  background-color: #f0f0f0;
+  background-color: #000;
 }
 .btn-control {
   position: absolute;
-  top: 30px;
+  top: 20px;
   right: 20px;
   display: inline-block;
   color: #fff;
@@ -52,7 +43,6 @@ const toggleControl = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 12px;
   background: rgba(0, 0, 0, 0.5);
   border-width: 0px;
   border-radius: 25px;

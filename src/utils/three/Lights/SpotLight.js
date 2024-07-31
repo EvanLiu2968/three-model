@@ -1,20 +1,20 @@
 import * as THREE from 'three'
+import Light from './Light'
 
 /**
- * 灯光基类
+ * 聚光灯，从一个点沿一个方向射出，随着光线照射的变远，光线圆锥体的尺寸也逐渐增大。
  */
-export default class SpotLight {
-  /**
-   * 灯光基类
-   */
-  constructor (_viewer, position = [0, 40, 0], option = { color: 'rgb(255,255,255)' }) {
-    this.viewer = _viewer
+export default class SpotLight extends Light {
+
+  constructor (scene, position = [0, 40, 0], option = { color: 'rgb(255,255,255)' }) {
+    super(scene)
+    this.scene = scene
     const color = new THREE.Color(option.color)
     this.light = new THREE.SpotLight(color)
     this.light.castShadow = true
     this.mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 10), new THREE.MeshBasicMaterial({ color: color }))
     this.light.add(this.mesh)
-    this.viewer.scene.add(this.light)
+    this.scene.add(this.light)
     this.setOption(option)
     this.setPosition(position)
   }
@@ -34,15 +34,5 @@ export default class SpotLight {
     this.light.shadow.camera.near = 0.1
     this.light.shadow.camera.far = 4000
     this.light.shadow.camera.fov = 30
-  }
-
-  /**
-   * 设置灯光位置
-   * @param x
-   * @param y
-   * @param z
-   */
-  setPosition ([x, y, z]) {
-    if (this.light) this.light.position.set(x || 0, y || 0, z || 0)
   }
 }

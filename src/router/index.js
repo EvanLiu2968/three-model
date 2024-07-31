@@ -46,6 +46,14 @@ export const router = createRouter({
         title: 'obliquePhotoModel',
       },
     },
+    {
+      path: '/metaverse',
+      name: 'Metaverse',
+      component: () => import('@/views/metaverse/index.vue'),
+      meta: {
+        title: 'metaverse',
+      },
+    },
   ],
   // 是否应该禁止尾部斜杠。默认为假
   strict: true,

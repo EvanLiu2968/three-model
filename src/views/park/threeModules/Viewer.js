@@ -16,7 +16,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js'
 // utils
 import { createControls, createHelper, Resizer, Loop } from '@/utils/three';
-import Lights from './Lights'
+import Lights from '@/utils/three/Lights'
 
 export default class Viewer {
   constructor(dom) {
@@ -34,7 +34,7 @@ export default class Viewer {
     new Resizer(this.viewerDom, this.camera, this.css2DRenderer);
     new Resizer(this.viewerDom, this.camera, this.css3DRenderer);
 
-    this.lights = new Lights(this)
+    this.lights = new Lights(this.scene)
 
     this.controls = createControls(this.camera, this.renderer.domElement);
 

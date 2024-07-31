@@ -1,11 +1,8 @@
 import * as THREE from 'three'
-import { createControls, createRenderer, createHelper, Resizer, Loop } from '@/utils/three';
-
-import { createCamera } from './components/camera.js';
-import { createLights } from './components/lights.js';
-import { createScene } from './components/scene.js';
-
 import { Howl } from "howler";
+
+import { createControls, createRenderer, createScene, createHelper, Resizer, Loop } from '@/utils/three';
+import Lights from '@/utils/three/Lights'
 
 class World {
   constructor(container) {
@@ -15,8 +12,8 @@ class World {
 
     this.renderer = createRenderer();
 
-    this.camera = createCamera();
-    this.camera.lookAt(this.scene.position);
+    this.camera = new THREE.PerspectiveCamera(60, 1, 1, 1000);
+    this.camera.position.set(-10, 20, -54);
 
     new Resizer(this.container, this.camera, this.renderer);
     this.container.append(this.renderer.domElement);
@@ -27,8 +24,8 @@ class World {
 
     this.loop.updatables.push(this.controls);
 
-    const { ambientLight, mainLight } = createLights();
-    this.scene.add(ambientLight, mainLight);
+    this.lights = new Lights(this.scene);
+    this.lights.addDirectionalLight()
 
     if (import.meta.env.MODE === 'development') {
       this.helper = createHelper(this.scene)
