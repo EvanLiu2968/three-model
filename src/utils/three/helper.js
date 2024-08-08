@@ -12,6 +12,8 @@ function createHelper(scene, options = {}) {
   axesHelper.name = 'axesHelper'
   axesHelper.visible = false
 
+  console.info('%caxesHelper: red is X-axis; green is Y-axis; bule is Z-axis;', 'color:#007bff')
+
   scene.add(gridHelper)
   scene.add(axesHelper)
 
